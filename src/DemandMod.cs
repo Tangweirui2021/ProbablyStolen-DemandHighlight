@@ -136,8 +136,13 @@ namespace DemandHighlight
                 Patch(h, typeof(GameItem).GetMethod("SetEnableDisableTag", AnyInstance, null, new[] { typeof(string), typeof(bool) }, null), "GameItem.SetEnableDisableTag", tagged);
                 Patch(h, typeof(GameItem).GetMethod("ModifyTag", AnyInstance, null, new[] { typeof(string), typeof(Action<TagState>), typeof(bool) }, null), "GameItem.ModifyTag", tagged);
                 Patch(h, typeof(GameItem).GetMethod("SetGameItemType", AnyInstance, null, new[] { typeof(string) }, null), "GameItem.SetGameItemType", tagged);
-                Patch(h, typeof(GameItemElement).GetMethod("RotCW", AnyInstance, null, Type.EmptyTypes, null), "GameItemElement.RotCW", mark);
-                Patch(h, typeof(GameItemElement).GetMethod("RotCCW", AnyInstance, null, Type.EmptyTypes, null), "GameItemElement.RotCCW", mark);
+                foreach (var name in new[] { "RotCW", "RotCCW", "Rot180", "FlipX", "FlipY",
+                    "GridRotCW", "GridRotCCW", "GridRot180", "GridFlipX", "GridFlipY" })
+                    Patch(h, typeof(GameItemElement).GetMethod(name, AnyInstance, null, Type.EmptyTypes, null), "GameItemElement." + name, mark);
+                // Runs after the game has copied the finished normal geometry to its drag preview. This is
+                // a badge-only refresh; repeated native layout calls must not force another stock scan.
+                Patch(h, typeof(GameItemElement).GetMethod("UpdateRectTransform", AnyInstance, null, Type.EmptyTypes, null),
+                    "GameItemElement.UpdateRectTransform", Hook("ElementGeometryChanged"));
                 Patch(h, typeof(GameItem).GetMethod("AddParent", AnyInstance, null, new[] { typeof(GraphNodeStorage) }, null), "GameItem.AddParent", moved);
                 Patch(h, typeof(GameItem).GetMethod("RemoveParent", AnyInstance, null, new[] { typeof(GraphNodeStorage) }, null), "GameItem.RemoveParent", moved);
                 // PixelWindow.Show and Hide have several overloads; every one is patched so no way of opening a
@@ -230,6 +235,7 @@ namespace DemandHighlight
         static void ElementCreated(GameItemElement __instance) { RiskStars.Track(__instance); }
         static void ElementDestroyed(GameItemElement __instance) { RiskStars.Remove(__instance); dirty = true; }
         static void ElementChanged(GameItemElement __instance) { RiskStars.Track(__instance); dirty = true; }
+        static void ElementGeometryChanged(GameItemElement __instance) { RiskStars.Track(__instance); }
 
         // Only our long priority field: TMP_InputField reports the entire value's preferred width at priority 1,
         // tying the native fixed-width LayoutElement. Unity then takes the larger width and crushes the label.

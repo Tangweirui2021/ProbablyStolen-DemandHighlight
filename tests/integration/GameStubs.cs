@@ -69,13 +69,17 @@ namespace UnityEngine
         public void SetAsLastSibling() { if (parent != null) { parent.children.Remove(this); parent.children.Add(this); } }
         public Vector3 TransformPoint(Vector3 p)
         {
-            var v = new Vector3(p.x * localScale.x + localPosition.x, p.y * localScale.y + localPosition.y, p.z);
+            double angle=localRotation.Z*Math.PI/180.0, c=Math.Cos(angle),s=Math.Sin(angle);
+            float x=p.x*localScale.x,y=p.y*localScale.y;
+            var v = new Vector3((float)(x*c-y*s)+localPosition.x, (float)(x*s+y*c)+localPosition.y, p.z);
             return parent == null ? v : parent.TransformPoint(v);
         }
         public Vector3 InverseTransformPoint(Vector3 p)
         {
             if (parent != null) p = parent.InverseTransformPoint(p);
-            return new Vector3((p.x - localPosition.x) / localScale.x, (p.y - localPosition.y) / localScale.y, p.z);
+            double angle=-localRotation.Z*Math.PI/180.0,c=Math.Cos(angle),s=Math.Sin(angle);
+            float x=p.x-localPosition.x,y=p.y-localPosition.y;
+            return new Vector3((float)(x*c-y*s)/localScale.x, (float)(x*s+y*c)/localScale.y, p.z);
         }
     }
     public class RectTransform : Transform
@@ -104,8 +108,19 @@ namespace UnityEngine
         public static Vector3 one { get { return new Vector3(1, 1, 1); } }
     }
     public struct Vector4 { public float x,y,z,w; public Vector4(float x, float y, float z, float w) { this.x=x; this.y=y; this.z=z; this.w=w; } public static Vector4 zero { get { return new Vector4(); } } }
-    public struct Quaternion { public static Quaternion identity { get { return new Quaternion(); } } }
-    public struct Rect { public float xMin, yMin, width, height; public Rect(float x, float y, float w, float h) { xMin=x; yMin=y; width=w; height=h; } }
+    public struct Quaternion
+    {
+        public float Z;
+        public static Quaternion identity { get { return new Quaternion(); } }
+        public static Quaternion Euler(float x,float y,float z) { return new Quaternion {Z=z}; }
+    }
+    public struct Rect
+    {
+        public float xMin, yMin, width, height;
+        public float xMax { get { return xMin+width; } }
+        public float yMax { get { return yMin+height; } }
+        public Rect(float x, float y, float w, float h) { xMin=x; yMin=y; width=w; height=h; }
+    }
     public class RectOffset { public RectOffset(int l,int r,int t,int b) { } }
     public enum TextAnchor { UpperLeft, MiddleLeft }
     public struct Color
@@ -364,21 +379,46 @@ public class GameItem : GraphNodeStorage
 public class GameItemElement : GameItem
 {
     public UnityEngine.RectTransform rectTransform;
-    public Rotator rotator;
-    public TreeNodeRender background, fakeBackground, fakeMiddle;
+    public TreeNodeRender rotator, fakeRotator, background, fakeBackground, fakeMiddle;
     bool destroyed;
     public GameItemElement()
     {
         rectTransform = (UnityEngine.RectTransform)new UnityEngine.GameObject("Item").transform;
+        rotator=TreeNodeRender.Create("Rotator");rotator.rectTransform.SetParent(rectTransform,false);
         background = TreeNodeRender.Create("Background");
+        background.rectTransform.SetParent(rotator.rectTransform,false);
         fakeMiddle = TreeNodeRender.Create("Drag view");
+        fakeRotator=TreeNodeRender.Create("Drag rotator");fakeRotator.rectTransform.SetParent(fakeMiddle.rectTransform,false);
         fakeBackground = TreeNodeRender.Create("Drag background");
+        fakeBackground.rectTransform.SetParent(fakeRotator.rectTransform,false);
         fakeBackground.image.enabled = false;
         HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this);
     }
     public void Validate() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
-    public void RotCW() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
-    public void RotCCW() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    void Rotate(float amount)
+    {
+        rotator.rectTransform.localRotation=UnityEngine.Quaternion.Euler(0,0,rotator.rectTransform.localRotation.Z+amount);
+        fakeRotator.rectTransform.localRotation=rotator.rectTransform.localRotation;
+        UpdateRectTransform();
+    }
+    void Mirror()
+    {
+        var s=rotator.rectTransform.localScale;
+        rotator.rectTransform.localScale=new UnityEngine.Vector3(-s.x,s.y,s.z);
+        fakeRotator.rectTransform.localScale=rotator.rectTransform.localScale;
+        UpdateRectTransform();
+    }
+    public void RotCW() { GridRotCW();HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void RotCCW() { GridRotCCW();HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void Rot180() { GridRot180();HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void FlipX() { GridFlipX();HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void FlipY() { GridFlipY();HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void GridRotCW() { Rotate(-90);HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void GridRotCCW() { Rotate(90);HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void GridRot180() { Rotate(180);HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void GridFlipX() { Mirror();HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void GridFlipY() { Mirror();Rotate(180);HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void UpdateRectTransform() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
     public bool IsDestroyed() { return destroyed; }
     public void Destroy() { destroyed = true; HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
     public void ToggleBackground(bool visible, float opacity, float brightness)
@@ -405,7 +445,6 @@ public class TreeNodeRender : UnityEngine.Component
         return go.AddComponent<TreeNodeRender>();
     }
 }
-public class Rotator { public UnityEngine.RectTransform rectTransform; }
 public class GridShape { public int width = 1, height = 1, orientation; public bool flipped; public int GetLocal(int x, int y) { return 1; } }
 public class PixelWindow
 {

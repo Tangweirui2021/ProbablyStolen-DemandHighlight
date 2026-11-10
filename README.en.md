@@ -26,6 +26,8 @@ Stars run independently of the current customer, demand hotkey and shop inventor
 
 Outline thickness, rounding, faint fill, the Item Filter, statistics and key bindings remain available. Type priority, every marker color, star size and corner inset are configurable. Pixel stars use point-filtered masks and ignore pointer input. Native drag previews have their own star: a whole-stack pickup hides the old position, while a partial-stack drag marks both visible portions.
 
+After rotation or mirroring, stars use the transformed footprint bounds of each native view, independently for normal and drag previews. The star itself stays upright at the visible top-right corner.
+
 Stars default to about one third of a single grid cell. Large containers and one-cell items use the same size; existing saved size levels become compact automatically after updating.
 
 The trashcan is part of the searchable stock: matching contents give the fixed bin a one-color corner hint; opening it marks each matching item.

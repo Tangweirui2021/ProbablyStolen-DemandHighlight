@@ -40,6 +40,56 @@ static class IntegrationTest
     static ConfigEntry<T> Entry<T>(string key) { return (ConfigEntry<T>)ModHelper.Config.Entries[key]; }
     static bool Outlined(GameItemElement item) { var go=Child(item,"DemandHighlight"); return go!=null && go.activeInHierarchy; }
     static CustomUIElement Widget(string id) { return CustomUIBuilder.Built.Find(e=>e.id==id); }
+    static bool Near(float a,float b) { return Math.Abs(a-b)<0.002f; }
+    static void FlushGeometry() { for(int i=0;i<8;i++) DemandMod.Tick(); }
+
+    static void RotationStars()
+    {
+        int oldScale=Entry<int>("starPixelScale").Value;
+        Entry<int>("starPixelScale").Set(2);
+        var item=new GameItemElement {Stolen=true,Contraband=true};
+        item.rectTransform.rect=new Rect(0,0,32,16);
+        item.fakeMiddle.rectTransform.rect=new Rect(0,0,32,16);
+        var visual=item.rotator.rectTransform;var fake=item.fakeRotator.rectTransform;
+        visual.rect=fake.rect=new Rect(-8,-12,32,16);
+        visual.localPosition=new Vector3(7,-3,0);fake.localPosition=new Vector3(-5,6,0);
+        var canvas=(RectTransform)new GameObject("Scaled inventory canvas").transform;
+        canvas.localScale=new Vector3(2,3,1);canvas.localPosition=new Vector3(100,200,0);
+        item.rectTransform.SetParent(canvas,false);item.fakeMiddle.rectTransform.SetParent(canvas,false);
+        item.rectTransform.localPosition=new Vector3(13,-21,0);
+        item.fakeMiddle.rectTransform.localPosition=new Vector3(150,-80,0);
+        item.ToggleFakeBackground(true,new Vector4(1,1,1,0.5f));Step();
+        // Analytic corner expectations for a non-square rectangle with an asymmetric pivot and nonzero origin.
+        var expected=new[] {new Vector2(-3,-17),new Vector2(-15,3),new Vector2(-19,-9),new Vector2(-23,-13),
+            new Vector2(-19,-17),new Vector2(-15,-13),new Vector2(-3,-9),new Vector2(-23,3)};
+        for(int mirrored=0;mirrored<2;mirrored++)for(int turn=0;turn<4;turn++)
+        {
+            visual.localRotation=fake.localRotation=Quaternion.Euler(0,0,turn*90);
+            visual.localScale=fake.localScale=new Vector3(mirrored==0?1:-1,1,1);
+            item.UpdateRectTransform();FlushGeometry();
+            var normal=(RectTransform)Child(item,"WRT.RiskStar").transform;
+            var drag=(RectTransform)DragStar(item).transform.parent;
+            var p=expected[mirrored*4+turn];
+            Check("rotated top-right corner: turn "+turn+" mirrored "+mirrored, Near(normal.anchoredPosition.x,p.x) && Near(normal.anchoredPosition.y,p.y));
+            Check("drag corner is computed independently: turn "+turn+" mirrored "+mirrored, Near(drag.anchoredPosition.x,p.x-12) && Near(drag.anchoredPosition.y,p.y+9));
+            Check("rotation preserves upright compact risk stars: turn "+turn+" mirrored "+mirrored,
+                normal.localRotation.Z==0 && drag.localRotation.Z==0 && normal.localScale.x==1 && drag.localScale.x==1 && normal.sizeDelta.x==5 && drag.sizeDelta.x==5 && Star(item).color==MarkerSettings.BothColor && Near(DragStar(item).color.a,MarkerSettings.BothColor.a*0.5f));
+        }
+        visual.localRotation=Quaternion.Euler(0,0,90);fake.localRotation=Quaternion.Euler(0,0,270);
+        visual.localScale=fake.localScale=Vector3.one;item.UpdateRectTransform();FlushGeometry();
+        Check("split-stack views can have different current rotations", Near(((RectTransform)Child(item,"WRT.RiskStar").transform).anchoredPosition.y,3) && Near(((RectTransform)DragStar(item).transform.parent).anchoredPosition.y,-4));
+        visual.rect=new Rect(-8,-8,16,16);visual.localPosition=new Vector3(8,-8,0);
+        item.rectTransform.rect=new Rect(0,-16,16,16);
+        for(int turn=0;turn<4;turn++)
+        {
+            visual.localRotation=Quaternion.Euler(0,0,turn*90);item.UpdateRectTransform();FlushGeometry();
+            var r=(RectTransform)Child(item,"WRT.RiskStar").transform;
+            Check("one-cell square retains its top-right corner at turn "+turn, Near(r.anchoredPosition.x,-2) && Near(r.anchoredPosition.y,-2));
+        }
+        foreach(var name in new[] {"RotCW","RotCCW","Rot180","FlipX","FlipY","GridRotCW","GridRotCCW","GridRot180","GridFlipX","GridFlipY","UpdateRectTransform"})
+            Check("native transform callback installed: "+name,HarmonyLib.Harmony.Patches.ContainsKey(typeof(GameItemElement).GetMethod(name)));
+        item.Destroy();Step();Entry<int>("starPixelScale").Set(oldScale);
+    }
 
     static void TrashAndDock()
     {
@@ -198,7 +248,6 @@ static class IntegrationTest
         Check("demand toggle off does not hide/update-block stars", Star(target) != null && Star(target).color == MarkerSettings.BothColor);
         SceneManager.Load("AfterhoursScene"); Step();
         Check("stars work across non-store scene changes", Star(target) != null);
-        target.rotator = new Rotator { rectTransform = (RectTransform)new GameObject("Internal rotator").transform };
         target.RotCW(); Step();
         Check("star anchors outside the item's internal rotator", Child(target, "WRT.RiskStar").transform.parent == target.rectTransform);
 
@@ -245,6 +294,7 @@ static class IntegrationTest
         Painter.Paint(Engine.Result);
         Check("container colour updates without rebuilding geometry", Child(box, "DemandHighlight").GetComponent<Image>().color == new Color(170 / 255f, 187 / 255f, 204 / 255f));
 
+        RotationStars();
         TrashAndDock();
         GameObject orphanUi;
         var weak = TemporaryView(out orphanUi);

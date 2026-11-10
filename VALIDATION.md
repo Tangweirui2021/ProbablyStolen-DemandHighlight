@@ -9,11 +9,12 @@ Assembly-CSharp SHA-256: `725cb999d019dff1ff31bed353c7f9bb8d81a7605a15de1f80f5a3
 
 - Production mod compiled against the supplied real game assemblies: zero warnings/errors.
 - Optional query sample compiled against those same assemblies: zero warnings/errors.
-- Real-assembly preflight confirmed 25 API targets, including constructors, destruction and native drag-visibility hooks.
-- The supplied game's own `ModScanner.Scan` scanned 540 methods: no refusal, no error, no capabilities and no hard flags.
+- Real-assembly preflight confirmed 34 API targets, including constructors, destruction and native drag-visibility hooks.
+- The supplied game's own `ModScanner.Scan` scanned 541 methods: no refusal, no error, no capabilities and no hard flags.
 - Thirteen pure-data test suites: 379 checks passed.
-- Production-code integration against explicitly labelled stand-in game/Unity APIs: 77 checks passed.
+- Production-code integration against explicitly labelled stand-in game/Unity APIs: 117 checks passed.
 - Trash/dock regressions cover closed/open fixed bins, removal of wanted contents, duplicate-free stock traversal, category/status selection, manual-query precedence, clearing, advanced-window synchronization, hidden inventory, no-customer use and scene cleanup.
+- Rotation regressions use actual affine matrix math in the stand-ins: four directions with/without mirroring, non-square rectangles, asymmetric pivots, shifted nodes, scaled canvases, independent drag geometry and one-cell squares. Geometry refreshes are checked without advancing the fallback polling clock.
 - Size/layout regressions cover one-cell items, large containers, grid-size changes, drag previews, top-right placement, the long priority field and isolation from other mods/settings.
 - Drag regressions cover whole-stack pickup, partial stacks, drag opacity, combined status, settings, drop and destruction cleanup.
 - Documentation links, 15 configuration keys, project/manifest XML, shell syntax and `git diff --check` passed.
@@ -21,7 +22,7 @@ Assembly-CSharp SHA-256: `725cb999d019dff1ff31bed353c7f9bb8d81a7605a15de1f80f5a3
 
 ## Player feedback and remaining gameplay checks
 
-Player feedback confirms that the wrt.3 feature set is broadly working. wrt.4 adds the trashcan traversal and embedded checkbox dock. Its placement, font size, scrolling and actual native-toggle input still need confirmation in the running game.
+Player feedback confirms that the wrt.3 feature set is broadly working and identified a remaining rotated-star position bug. wrt.5 corrects badge placement using transformed footprint bounds. Actual in-game confirmation of this fix and the wrt.4 checkbox dock remains pending.
 
 - Native dock layout and pointer interaction in the running game, especially narrow resolutions and resized inventories.
 - Visual layout, scaling, clipping, rotation and mirroring in the running game.

@@ -1,5 +1,12 @@
 # WRT fork changelog
 
+## 1.0.0-wrt.5
+
+- Fixed stars staying at the unrotated parent rectangle's corner. Each badge now measures its native rotator's transformed bounds in the upright parent before placement.
+- Normal and drag views compute their bounds independently, including asymmetric pivots, mirroring and shifted origins.
+- Added half-turn, flip and grid-transform callbacks plus a badge-only native geometry callback for prompt updates.
+- Added matrix-based integration regressions for four directions, mirrored non-square items, independent split views, scaled canvases and square one-cell items.
+
 ## 1.0.0-wrt.4
 
 - Included the fixed trashcan slot and its contents in demand scans, filter counts and public queries. Fixed containers can now show a contents hint without being offered for sale.

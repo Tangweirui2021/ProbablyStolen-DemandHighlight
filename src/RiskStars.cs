@@ -35,6 +35,7 @@ namespace DemandHighlight
         static int cursor;
         static Sprite star, edge;
         static bool warned;
+        static readonly Vector3[] corners = new Vector3[4];
 
         public static void Track(GameItemElement item)
         {
@@ -114,9 +115,13 @@ namespace DemandHighlight
 
             // The game hides an exhausted original stack by disabling its image, while keeping its object active.
             // A partial-stack drag can legitimately have both views visible. Follow each native view separately.
-            Render(entry.Normal, entry.Registration.Root, item.rectTransform, VisibleOpacity(item.background), risk);
+            var visual = item.rotator;
+            Render(entry.Normal, entry.Registration.Root, item.rectTransform,
+                visual != null ? visual.rectTransform : item.rectTransform, VisibleOpacity(item.background), risk);
             var fake = item.fakeMiddle;
+            var fakeVisual = item.fakeRotator;
             Render(entry.Drag, entry.Registration.DragRoot, fake != null ? fake.rectTransform : null,
+                fakeVisual != null ? fakeVisual.rectTransform : (fake != null ? fake.rectTransform : null),
                 VisibleOpacity(item.fakeBackground), risk);
         }
 
@@ -126,10 +131,22 @@ namespace DemandHighlight
             return Mathf.Clamp(node.image.color.a, 0f, 1f);
         }
 
-        static void Render(Badge badge, WeakReference root, RectTransform anchor, float opacity, Risk risk)
+        static void Render(Badge badge, WeakReference root, RectTransform anchor, RectTransform visual, float opacity, Risk risk)
         {
-            if (anchor == null || !anchor.gameObject.activeInHierarchy || opacity <= 0f || anchor.rect.width < 1f || anchor.rect.height < 1f)
+            if (anchor == null || visual == null || !anchor.gameObject.activeInHierarchy || opacity <= 0f)
             { Hide(badge); return; }
+            // Middle is upright, but its rectangle is not the rotated footprint. Measure the actual rotator
+            // in that upright coordinate system; pivots, mirroring and native node offsets then come along.
+            visual.GetWorldCorners(corners);
+            var first = anchor.InverseTransformPoint(corners[0]);
+            float minX = first.x, maxX = first.x, minY = first.y, maxY = first.y;
+            for (int i = 1; i < corners.Length; i++)
+            {
+                var p = anchor.InverseTransformPoint(corners[i]);
+                minX = Math.Min(minX, p.x); maxX = Math.Max(maxX, p.x);
+                minY = Math.Min(minY, p.y); maxY = Math.Max(maxY, p.y);
+            }
+            if (maxX - minX < 1f || maxY - minY < 1f) { Hide(badge); return; }
             Ensure(badge, root, anchor);
             badge.Root.SetActive(true);
             badge.Rect.SetAsLastSibling();
@@ -137,9 +154,11 @@ namespace DemandHighlight
             badge.Rect.localScale = Vector3.one;
             var ui = UISettings.current;
             float side = Presentation.StarSize(ui != null ? ui.gridSize : 16, MarkerSettings.StarScale);
-            side = Math.Min(side, Math.Min(anchor.rect.width, anchor.rect.height));
+            side = Math.Min(side, Math.Min(maxX - minX, maxY - minY));
             badge.Rect.sizeDelta = new Vector2(side, side);
-            badge.Rect.anchoredPosition = new Vector2(-MarkerSettings.StarInset, -MarkerSettings.StarInset);
+            var bounds = anchor.rect;
+            badge.Rect.anchoredPosition = new Vector2(maxX - bounds.xMax - MarkerSettings.StarInset,
+                maxY - bounds.yMax - MarkerSettings.StarInset);
             var fill = MarkerSettings.Star(risk); fill.a *= opacity;
             var outline = MarkerSettings.StarOutlineColor; outline.a *= opacity;
             badge.Fill.color = fill;

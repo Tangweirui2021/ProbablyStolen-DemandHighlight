@@ -32,7 +32,8 @@ static class Program
         if (constructors.Length == 0) throw new MissingMethodException("GameItemElement constructors");
         targets += constructors.Length;
         foreach (var c in constructors) Console.WriteLine("TARGET GameItemElement." + c);
-        foreach (var name in new[] { "Validate", "Destroy", "RotCW", "RotCCW", "IsDestroyed" })
+        foreach (var name in new[] { "Validate", "Destroy", "IsDestroyed", "RotCW", "RotCCW", "Rot180", "FlipX", "FlipY",
+            "GridRotCW", "GridRotCCW", "GridRot180", "GridFlipX", "GridFlipY", "UpdateRectTransform" })
             method(typeof(GameItemElement), name, Type.EmptyTypes);
         foreach (var name in new[] { "ToggleBackground", "ToggleFakeBackground" })
         {
