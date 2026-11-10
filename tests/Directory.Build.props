@@ -1,0 +1,7 @@
+<Project>
+  <!-- Each test project needs its own generated apphost/assets; otherwise their shared directory mixes outputs. -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>

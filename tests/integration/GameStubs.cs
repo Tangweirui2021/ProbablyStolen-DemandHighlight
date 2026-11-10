@@ -1,0 +1,329 @@
+// A stand-in UI/game API, ONLY for tests. Never compiled or shipped in the mod DLL.
+// These tests exercise production code, but cannot establish compatibility with real game assemblies.
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace UnityEngine
+{
+    public class Object
+    {
+        internal bool destroyed;
+        public HideFlags hideFlags;
+        public static void Destroy(Object o)
+        {
+            if (ReferenceEquals(o, null)) return;
+            o.destroyed = true;
+            var go = o as GameObject;
+            if (!ReferenceEquals(go, null)) { go.activeSelf = false; go.transform.SetParent(null, false); go.transform.destroyed = true; }
+        }
+        public static void DontDestroyOnLoad(Object o) { }
+        public static bool operator ==(Object a, Object b)
+        {
+            bool an = ReferenceEquals(a, null) || a.destroyed, bn = ReferenceEquals(b, null) || b.destroyed;
+            return an || bn ? an == bn : ReferenceEquals(a, b);
+        }
+        public static bool operator !=(Object a, Object b) { return !(a == b); }
+        public override bool Equals(object o) { return ReferenceEquals(this, o); }
+        public override int GetHashCode() { return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this); }
+    }
+    public class Component : Object
+    {
+        public GameObject gameObject;
+        public Transform transform { get { return gameObject.transform; } }
+    }
+    public class MonoBehaviour : Component { }
+    public class GameObject : Object
+    {
+        public string name;
+        public Transform transform;
+        public bool activeSelf = true;
+        public bool activeInHierarchy { get { return activeSelf && (transform.parent == null || transform.parent.gameObject.activeInHierarchy); } }
+        readonly Dictionary<Type, Component> components = new Dictionary<Type, Component>();
+        public GameObject(string name, params Type[] types)
+        {
+            this.name = name;
+            transform = new RectTransform { gameObject = this };
+            components[typeof(RectTransform)] = transform;
+            foreach (var t in types) if (t != typeof(RectTransform)) AddComponent(t);
+        }
+        Component AddComponent(Type type) { var c = (Component)Activator.CreateInstance(type); c.gameObject = this; components[type] = c; return c; }
+        public T AddComponent<T>() where T : Component, new() { return (T)AddComponent(typeof(T)); }
+        public T GetComponent<T>() where T : Component { Component c; return components.TryGetValue(typeof(T), out c) ? c as T : null; }
+        public void SetActive(bool active) { activeSelf = active; }
+    }
+    public class Transform : Component
+    {
+        public Transform parent;
+        public readonly List<Transform> children = new List<Transform>();
+        public int childCount { get { return children.Count; } }
+        public Vector3 localScale = Vector3.one;
+        public Quaternion localRotation;
+        public Transform GetChild(int i) { return children[i]; }
+        public void SetParent(Transform p, bool worldPositionStays)
+        {
+            if (parent != null) parent.children.Remove(this);
+            parent = p; if (p != null) p.children.Add(this);
+        }
+        public void SetAsLastSibling() { if (parent != null) { parent.children.Remove(this); parent.children.Add(this); } }
+    }
+    public class RectTransform : Transform
+    {
+        public Rect rect = new Rect(0, 0, 64, 64);
+        public Vector2 anchorMin, anchorMax, pivot, offsetMin, offsetMax, sizeDelta, anchoredPosition;
+    }
+    public struct Vector2
+    {
+        public float x, y;
+        public Vector2(float x, float y) { this.x = x; this.y = y; }
+        public static Vector2 zero { get { return new Vector2(); } }
+        public static Vector2 one { get { return new Vector2(1, 1); } }
+    }
+    public struct Vector3
+    {
+        public float x, y, z;
+        public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
+        public static Vector3 one { get { return new Vector3(1, 1, 1); } }
+    }
+    public struct Vector4 { public Vector4(float x, float y, float z, float w) { } public static Vector4 zero { get { return new Vector4(); } } }
+    public struct Quaternion { public static Quaternion identity { get { return new Quaternion(); } } }
+    public struct Rect { public float width, height; public Rect(float x, float y, float w, float h) { width = w; height = h; } }
+    public struct Color
+    {
+        public float r, g, b, a;
+        public Color(float r, float g, float b, float a = 1f) { this.r = r; this.g = g; this.b = b; this.a = a; }
+        public static bool operator ==(Color a, Color b) { return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a; }
+        public static bool operator !=(Color a, Color b) { return !(a == b); }
+        public override bool Equals(object o) { return o is Color && this == (Color)o; }
+        public override int GetHashCode() { return r.GetHashCode(); }
+    }
+    public struct Color32 { public byte r, g, b, a; public Color32(byte r, byte g, byte b, byte a) { this.r = r; this.g = g; this.b = b; this.a = a; } }
+    public class Texture2D : Object
+    {
+        public FilterMode filterMode; public TextureWrapMode wrapMode;
+        public Color32[] Pixels;
+        public Texture2D(int w, int h, TextureFormat format, bool mipmap) { }
+        public void SetPixels32(Color32[] pixels) { Pixels = pixels; }
+        public void Apply(bool update, bool unreadable) { }
+    }
+    public class Sprite : Object
+    {
+        public Texture2D texture;
+        public static Sprite Create(Texture2D texture, Rect rect, Vector2 pivot, float ppu, uint extrude = 0,
+            SpriteMeshType type = SpriteMeshType.FullRect, Vector4 border = default(Vector4)) { return new Sprite { texture = texture }; }
+    }
+    public class Canvas : Component { public float referencePixelsPerUnit = 100; }
+    public enum HideFlags { HideAndDontSave }
+    public enum TextureFormat { RGBA32 }
+    public enum FilterMode { Point }
+    public enum TextureWrapMode { Clamp }
+    public enum SpriteMeshType { FullRect }
+    public enum KeyCode { None, F5, F6 }
+    public static class Input { public static bool GetKeyDown(KeyCode key) { return false; } }
+    public static class PlayerPrefs
+    {
+        public static int GetInt(string key, int fallback) { return fallback; }
+        public static void SetInt(string key, int value) { } public static void Save() { }
+    }
+    public static class Time { public static float unscaledTime; }
+    public static class Debug
+    {
+        public static readonly List<string> Warnings = new List<string>();
+        public static void Log(object x) { }
+        public static void LogWarning(object x) { Warnings.Add(x.ToString()); Console.WriteLine("WARN " + x); }
+    }
+    public static class Mathf
+    {
+        public static int RoundToInt(float v) { return (int)Math.Round(v); }
+        public static int Clamp(int v, int min, int max) { return Math.Min(max, Math.Max(min, v)); }
+        public static float Clamp(float v, float min, float max) { return Math.Min(max, Math.Max(min, v)); }
+        public static int Min(int a, int b) { return Math.Min(a, b); }
+    }
+}
+namespace UnityEngine.UI
+{
+    public class Image : UnityEngine.Component
+    {
+        public enum Type { Simple, Sliced, Tiled }
+        public bool raycastTarget = true, fillCenter;
+        public UnityEngine.Sprite sprite;
+        public Type type;
+        public UnityEngine.Color color;
+        public UnityEngine.Canvas canvas;
+        public float pixelsPerUnitMultiplier;
+    }
+    public class LayoutElement : UnityEngine.Component { public bool ignoreLayout; }
+}
+namespace UnityEngine.SceneManagement
+{
+    public struct Scene { public string name; }
+    public enum LoadSceneMode { Single, Additive }
+    public static class SceneManager
+    {
+        public static event Action<Scene, LoadSceneMode> sceneLoaded;
+        public static void Load(string name) { if (sceneLoaded != null) sceneLoaded(new Scene { name = name }, LoadSceneMode.Single); }
+    }
+}
+namespace HarmonyLib
+{
+    public class HarmonyMethod { public MethodInfo Method; public HarmonyMethod(MethodInfo method) { Method = method; } }
+    public class Harmony
+    {
+        public static readonly Dictionary<MethodBase, MethodInfo> Patches = new Dictionary<MethodBase, MethodInfo>();
+        public Harmony(string id) { }
+        public void Patch(MethodBase target, HarmonyMethod prefix = null, HarmonyMethod postfix = null) { Patches[target] = postfix.Method; }
+        public void UnpatchAll(string id) { Patches.Clear(); }
+        public static void Notify(MethodBase target, object instance)
+        {
+            MethodInfo m; if (!Patches.TryGetValue(target, out m)) return;
+            var args = new object[m.GetParameters().Length];
+            for (int i = 0; i < args.Length; i++) if (m.GetParameters()[i].Name == "__instance") args[i] = instance;
+            m.Invoke(null, args);
+        }
+    }
+}
+
+public class ConfigEntry<T>
+{
+    public T Value;
+    public event Action<T> OnChanged;
+    public void Set(T value) { Value = value; if (OnChanged != null) OnChanged(value); }
+}
+public class ModConfig
+{
+    public readonly Dictionary<string, object> Entries = new Dictionary<string, object>();
+    public ConfigEntry<T> Define<T>(string key, T initial, string section, Func<string> label, Func<string> tooltip = null, bool restart = false)
+    {
+        var entry = new ConfigEntry<T> { Value = initial }; Entries[key] = entry; return entry;
+    }
+    public ConfigEntry<int> Define(string key, int initial, string section, Func<string> label, int min, int max,
+        Func<string> tooltip = null, bool restart = false) { return Define<int>(key, initial, section, label, tooltip, restart); }
+}
+public static class ModHelper
+{
+    public static readonly ModConfig Config = new ModConfig();
+    public static ModConfig GetConfig(string id) { return Config; }
+    public static string GetLocalized(string id, string key) { return key; }
+    public static void AddGameOptionKeyBind(string mod, string section, string key, Func<string> label,
+        Func<UnityEngine.KeyCode> get, Action<UnityEngine.KeyCode> set, Func<string> tip) { }
+}
+public interface IMod { void Init(ModManifest manifest); void OnEnable(); void OnDisable(); }
+public class ModManifest { public string ID; }
+public static class KeyBindHelper { public static bool SuppressHotkeys; }
+public static class TypeHelper { public static readonly List<string> ALL_TYPES_LIST = new List<string> { "FOOD", "TOOL", "CONTRABAND" }; }
+public class GraphNodeStorage { public List<GraphNodeStorage> children = new List<GraphNodeStorage>(); }
+public class GameInventory : GraphNodeStorage
+{
+    public List<GameItem> childItems = new List<GameItem>(); public GameItem Parent;
+    public GameItem GetParentItem() { return Parent; }
+}
+public class TagState { public bool Enabled; public bool GetBool() { return Enabled; } }
+public class ModifiedState { public Dictionary<string, TagState> dict = new Dictionary<string, TagState>(); }
+public class ItemCondition { public string identifier; }
+public class ItemFeature { public bool useCondition; public ItemCondition GetCurrentItemCondition() { return null; } }
+public class GameItem : GraphNodeStorage
+{
+    public Func<GameItem, GameInventory, bool> mayInventoryRemoveItemFunc;
+    public string identifier = "test";
+    public bool Stolen, Contraband, Owned = true, Immovable;
+    public GameInventory parentInventory;
+    public List<string> itemTypes = new List<string>();
+    public List<ItemFeature> itemFeatures = new List<ItemFeature>();
+    public ModifiedState modifiedState = new ModifiedState();
+    public PixelWindow contentWindow;
+    public bool IsTag(string tag) { TagState state; return modifiedState.dict.TryGetValue(tag, out state) && state.Enabled; }
+    public bool IsGameItemType(string type) { return itemTypes.Contains(type); }
+    public bool IsMovable() { return !Immovable; }
+    public void EnableTag(string key, bool validate) { }
+    public void DisableTag(string key, bool validate) { }
+    public void SetEnableDisableTag(string key, bool validate) { }
+    public void ModifyTag(string key, Action<TagState> change, bool validate) { }
+    public void SetGameItemType(string type) { }
+    public void AddParent(GraphNodeStorage node) { }
+    public void RemoveParent(GraphNodeStorage node) { }
+}
+public class GameItemElement : GameItem
+{
+    public UnityEngine.RectTransform rectTransform;
+    public GridShape shape, modifiedShape;
+    public Rotator rotator;
+    public GameItemElement()
+    {
+        rectTransform = (UnityEngine.RectTransform)new UnityEngine.GameObject("Item").transform;
+        HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this);
+    }
+    public void Validate() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void RotCW() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void RotCCW() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+}
+public class Rotator { public UnityEngine.RectTransform rectTransform; }
+public class GridShape { public int width = 1, height = 1, orientation; public bool flipped; public int GetLocal(int x, int y) { return 1; } }
+public class PixelWindow
+{
+    public bool isLocked, Visible;
+    public object childElement;
+    public List<GameItem> parentItems = new List<GameItem>();
+    public bool IsVisible() { return Visible; }
+    public void Show() { Visible = true; }
+    public void Hide() { Visible = false; }
+}
+public class MachineryTabs
+{
+    public int count;
+    public UnityEngine.RectTransform rectTransform;
+    public object GetPage(int i) { return null; }
+}
+public class MachineryIntake { public object content; }
+public class MachineryPanel { public object content; }
+public class MachineryPanelRow
+{
+    public List<MachineryPanel> Panels = new List<MachineryPanel>();
+    public MachineryPanel GetPanel(string role) { return null; }
+}
+public static class ContrabandHelper
+{
+    public static bool IsContraband(GameItem item) { return item.Contraband; }
+    public static bool IsBlockSearchContainer(GameItem item) { return false; }
+}
+public static class StolenHelper { public static bool IsStolenItem(GameItem item) { return item.Stolen; } }
+public static class GeneralHelper { public static bool IsItemOwned(GameItem item) { return item.Owned; } }
+public static class LockHelper { public static bool IsLockedContainer(GameItem item) { return item.IsTag("LOCKED_CONTAINER_TAG"); } }
+public class EmporiumEntry
+{
+    public static EmporiumEntry Instance;
+    public GameInventory invElement, frontInvinvElement, backInvinvElement, backInvinvElementCounter,
+        showcaseElement, bazarLeftinvElement, hiddenElement, soldElement;
+}
+public class StoreClient
+{
+    public string identifier;
+    public int clientIntent;
+    public List<string> clientBuyingTagList = new List<string>(), clientBuyingIdList = new List<string>(), varietyTrackingList = new List<string>();
+    public bool isRequireVariety;
+    public BarterOffer barterOffer;
+    public bool IsClientBuyingThisItem(GameItem item, bool ignoreContents) { return item.IsGameItemType("FOOD"); }
+}
+public class BarterOffer { public List<BarterCondition> conditions; }
+public class BarterCondition { public string requiredItemId, requiredItemTag; public List<string> blacklistedConditionId; }
+public class ClientInstance { public StoreClient Blueprint; public StoreClient GetClientBlueprint() { return Blueprint; } }
+public class PlayerStore { public static PlayerStore Instance; public ClientInstance currentClientInstance; }
+namespace DemandHighlight
+{
+    // Unmodified peripheral UI/API is replaced in this integration fixture.
+    public static class Panel
+    {
+        public static Func<string, string> L; public static Action Changed; public static Func<bool> Numbers;
+        public static bool Typing;
+        public static IEnumerable<string> KnownTypes() { return TypeHelper.ALL_TYPES_LIST; }
+        public static string TypeName(string type) { return type; }
+        public static void SetNumbers(bool value) { } public static void Toggle() { }
+        public static void Refresh() { } public static void Destroy() { }
+    }
+    public static class Filter
+    {
+        public static int StockVersion; public static bool Active;
+        public static FilterView View() { return null; }
+    }
+    public static class Marks { public static void Offer() { } public static void Withdraw() { } public static void Release() { } }
+    public static class QueryHost { public static void Publish() { } public static void Withdraw() { } }
+}

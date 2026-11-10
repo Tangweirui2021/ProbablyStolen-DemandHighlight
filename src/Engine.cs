@@ -243,7 +243,7 @@ namespace DemandHighlight
 
             if (shown)
             {
-                var style = Decide.Display(plan, e.F, e.V, self, inside, lockedAbove, blockedAbove);
+                var style = Presentation.DemandStyle(Decide.Display(plan, e.F, e.V, self, inside, lockedAbove, blockedAbove));
                 e.Style = style;
                 var element = item as GameItemElement;
                 if (style.Mark != Mark.None && element != null) Result.AddItem(element, style);

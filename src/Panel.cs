@@ -25,7 +25,7 @@ namespace DemandHighlight
     // is built when opened, destroyed when closed, and reopens where it was left.
     public static class Panel
     {
-        const string WindowId = "demand_highlight_filter";
+        const string WindowId = "wrt_type_demand_stars_filter";
         const string DimColor = "#8E887C", ErrorColor = "#D0614A";
         static readonly Color ErrorText = new Color(0.82f, 0.38f, 0.29f);
         const float Width = 820f, Height = 640f, CellWidth = 250f, CellHeight = 30f;

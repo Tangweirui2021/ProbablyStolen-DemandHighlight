@@ -1,16 +1,14 @@
-# Demand Highlight - Deutsch (de)
+# Type Demand & Risk Stars - Deutsch (de)
 opt_thickness,Umrissstärke
 opt_thickness_tip,Linienbreite in UI-Pixeln.
 opt_corner,Eckenrundung
 opt_corner_tip,Radius der abgerundeten Außenecken. 0 = eckig.
 opt_fill,Gesuchte Gegenstände tönen
 opt_fill_tip,Füllt den Umriss gesuchter Gegenstände leicht aus.
-opt_goods,Waren des Kunden markieren
-opt_goods_tip,Wenn ein Kunde verkauft: markiert seine gestohlene Ware und Schmuggelware.
 opt_numbers,Zahlen im Gegenstandsfilter
 opt_numbers_tip,Zeigt im Gegenstandsfilter Anzahl; Wert; belegte Felder und Wert pro Feld der Treffer.
 opt_key,Bedarfshervorhebung umschalten
-opt_key_tip,Schaltet die Umrisse ein und aus.
+opt_key_tip,Turns demand/filter outlines on and off. Permanent risk stars are independent.
 opt_panel_key,Gegenstandsfilter öffnen
 opt_panel_key_tip,Öffnet das Fenster, das Gegenstände nach Typ oder als gestohlen oder Schmuggelware markiert.
 window_title,Gegenstandsfilter
@@ -26,7 +24,7 @@ fam_legal,EINGESCHRÄNKT
 fam_other,SONSTIGES
 tip_stolen,Nur gestohlene Gegenstände; mit Typ-Häkchen deren gestohlene. Mit Schmuggelware zusammen: eines von beiden. Die Kundenhervorhebung pausiert, solange ein Filter aktiv ist. Nochmals klicken schließt aus (✗), noch einmal hebt auf.
 tip_contraband,Nur Schmuggelware; mit Typ-Häkchen deren Schmuggelware. Mit Gestohlen zusammen: eines von beiden. Die Kundenhervorhebung pausiert, solange ein Filter aktiv ist. Nochmals klicken schließt aus (✗), noch einmal hebt auf.
-tip_type,Markiert Gegenstände vom Typ # in Cyan. Mehrere Typen bedeuten einen davon. Die Zahl ist, was dieses Häkchen mit dem übrigen Filter findet. Nochmals klicken schließt aus (✗), noch einmal hebt auf.
+tip_type,Marks # matching items with their configured type colors. Click again to exclude; once more to untick.
 tip_clear,Filter leeren und zur Kundenhervorhebung zurückkehren.
 expr_placeholder,Unten abhaken oder tippen: type:food -stolen
 tip_expr,Der Filter selbst: die Häkchen unten schreiben hinein und folgen deiner Eingabe. Wörter: stolen; contraband; owned; ein Typname. Schlüssel: type: tag: id: condition:. Verbinden mit and / or / not (oder + | -) und Klammern.
@@ -44,3 +42,14 @@ stats_shop,Laden  {n} Gegenstände   {v} gesamt   {c} Felder   {d} pro Feld
 stats_match,Treffer  {n} Gegenstände   {v} gesamt ({p} des Ladens)   {c} Felder   {d} pro Feld (Laden {a})
 short_form,Kurz
 tip_short_form,Den Filter mit + | - statt and or not schreiben. Beides wird immer verstanden.
+opt_default_color,Fallback outline color
+opt_container_color,Container hint color
+opt_stolen_color,Stolen-only star color (yellow)
+opt_contraband_color,Contraband-only star color (green)
+opt_both_color,Stolen + contraband star color (red)
+opt_star_edge,Pixel star outline color
+opt_stars,Always mark stolen goods and contraband
+opt_star_scale,Star pixel scale
+opt_star_inset,Star corner inset
+opt_type_priority,Item type priority (comma-separated IDs)
+opt_hex_tip,Use #RRGGBB or #RRGGBBAA. An invalid value uses the last valid color (the default after restarting).

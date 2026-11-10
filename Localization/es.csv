@@ -1,16 +1,14 @@
-# Demand Highlight - Español (es)
+# Type Demand & Risk Stars - Español (es)
 opt_thickness,Grosor del contorno
 opt_thickness_tip,Ancho de línea en píxeles de interfaz.
 opt_corner,Redondeo de esquinas
 opt_corner_tip,Radio de las esquinas exteriores redondeadas. 0 = rectas.
 opt_fill,Teñir los objetos deseados
 opt_fill_tip,Añade un relleno tenue dentro del contorno de los objetos deseados.
-opt_goods,Marcar los objetos del cliente
-opt_goods_tip,Cuando un cliente vende: marca sus objetos robados y su contrabando.
 opt_numbers,Cifras en el filtro de objetos
 opt_numbers_tip,Muestra en el filtro de objetos cuántos coinciden; su valor; las casillas que ocupan y el valor por casilla.
 opt_key,Activar o desactivar el resaltado
-opt_key_tip,Activa y desactiva los contornos.
+opt_key_tip,Turns demand/filter outlines on and off. Permanent risk stars are independent.
 opt_panel_key,Abrir el filtro de objetos
 opt_panel_key_tip,Abre la ventana que marca objetos por tipo o como robados o de contrabando.
 window_title,Filtro de objetos
@@ -26,7 +24,7 @@ fam_legal,RESTRINGIDO
 fam_other,OTROS
 tip_stolen,Solo objetos robados; con tipos marcados sus robados. Junto con Contrabando: cualquiera de los dos. El resaltado del cliente se pausa mientras haya un filtro. Otro clic excluye (✗) y otro más desmarca.
 tip_contraband,Solo contrabando; con tipos marcados su contrabando. Junto con Robado: cualquiera de los dos. El resaltado del cliente se pausa mientras haya un filtro. Otro clic excluye (✗) y otro más desmarca.
-tip_type,Marca en cian los objetos de tipo #. Varios tipos marcados significan cualquiera. La cifra es lo que esta marca encuentra con el resto del filtro. Otro clic excluye (✗) y otro más desmarca.
+tip_type,Marks # matching items with their configured type colors. Click again to exclude; once more to untick.
 tip_clear,Vacía el filtro y vuelve al resaltado del cliente.
 expr_placeholder,Marca abajo o escribe: type:food -stolen
 tip_expr,El filtro en sí: las marcas de abajo escriben en él y siguen lo que escribes. Palabras: stolen; contraband; owned; un nombre de tipo. Claves: type: tag: id: condition:. Se une con and / or / not (o + | -) y paréntesis.
@@ -44,3 +42,14 @@ stats_shop,Tienda  {n} objetos   {v} en total   {c} casillas   {d} por casilla
 stats_match,Coinciden  {n} objetos   {v} en total ({p} de la tienda)   {c} casillas   {d} por casilla (tienda {a})
 short_form,Corto
 tip_short_form,Escribe el filtro con + | - en vez de and or not. Ambas formas se entienden siempre.
+opt_default_color,Fallback outline color
+opt_container_color,Container hint color
+opt_stolen_color,Stolen-only star color (yellow)
+opt_contraband_color,Contraband-only star color (green)
+opt_both_color,Stolen + contraband star color (red)
+opt_star_edge,Pixel star outline color
+opt_stars,Always mark stolen goods and contraband
+opt_star_scale,Star pixel scale
+opt_star_inset,Star corner inset
+opt_type_priority,Item type priority (comma-separated IDs)
+opt_hex_tip,Use #RRGGBB or #RRGGBBAA. An invalid value uses the last valid color (the default after restarting).

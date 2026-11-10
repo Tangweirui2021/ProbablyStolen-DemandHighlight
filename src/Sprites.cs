@@ -11,7 +11,9 @@ namespace DemandHighlight
     // - Other shapes get a texture that follows their grid cells (L-shapes get an L outline), drawn 1:1 with the
     //   UI so lines stay crisp, cached by shape and size.
     //
-    // Looks, white in the texture and tinted by the Image colour:
+    // Retained geometry supports the upstream looks below. This fork normalizes displayed demand marks
+    // to Normal/Contents; the stolen/contraband geometry remains for the inherited pure-data contract/tests.
+    // Masks are white and tinted by the configured product/container colour:
     //   wanted      solid line and a faint fill
     //   stolen      diagonal "caution tape" line and a faint fill
     //   contraband  heavy line, a thin inner line and a stronger fill

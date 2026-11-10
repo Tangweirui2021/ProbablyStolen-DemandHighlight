@@ -1,8 +1,10 @@
-// Demand Highlight's query API, for other mods: find the items of the shop that match an Item Filter expression,
+// Type Demand & Risk Stars preserves this upstream 1.x client contract and its slot/class names.
+// Install provider mod wrt_type_demand_stars; results are shop queries, not the global permanent-star registry.
+// Type Demand & Risk Stars's query API, for other mods: find the items of the shop that match an Item Filter expression,
 // such as  type:(food or medical) not stolen  , without the highlight or the filter window.
 //
-// Copy this file into your mod. It needs no reference to Demand Highlight, and works the same whether or not
-// Demand Highlight is installed: without it (or with a version whose contract this file does not know), every call
+// Copy this file into your mod. It needs no reference to Type Demand & Risk Stars, and works the same whether or not
+// Type Demand & Risk Stars is installed: without it (or with a version whose contract this file does not know), every call
 // says NotInstalled and nothing else happens.
 //
 //   var found = new List<GameItem>();
@@ -10,16 +12,16 @@
 //   if (r.Ok) Debug.Log("[MyMod] " + r.Count + " items: " + r.Text);
 //   else if (r.Status == DemandHighlightQuery.Status.Invalid) Debug.Log("[MyMod] at " + r.Position + ": " + r.Message);
 //
-// Rules, from Demand Highlight's side:
+// Rules, from Type Demand & Risk Stars's side:
 //   - Call from the game's main thread (Unity's), as any game code. Another thread gets WrongThread.
 //   - Items belong to the shop. Use them while it is loaded and let them go when the scene changes: keeping one
 //     keeps the whole store in memory. Run clears your list first; reuse it between calls.
 //   - Each Run walks the shop once, closed containers included. Nothing is cached between calls, so run it when you
 //     need an answer, not every frame.
-//   - The language is the Item Filter's (Demand Highlight's manual, "Filter language"). Type names are read in the
+//   - The language is the Item Filter's (Type Demand & Risk Stars's manual, "Filter language"). Type names are read in the
 //     player's language too, so prefer identifiers (type:FOOD) in code; Field and Quote below build terms safely.
 //
-// How it works: Demand Highlight puts two delegates and a version string in slots of the AppDomain, which every
+// How it works: Type Demand & Risk Stars puts two delegates and a version string in slots of the AppDomain, which every
 // mod's assembly shares, when it is enabled, and takes them out when it is disabled. This file reads them on each
 // call. Contract 1.x: a result row is object[] { int status, int count, string problem, string detail,
 // int position, int length, string message, string text }; later minor versions only add fields at the end.
@@ -58,7 +60,7 @@ public static class DemandHighlightQuery
         public bool Ok { get { return Status == Status.Ok; } }
     }
 
-    // The contract's version ("1.0"), or null when Demand Highlight is not there.
+    // The contract's version ("1.0"), or null when Type Demand & Risk Stars is not there.
     public static string Version
     {
         get

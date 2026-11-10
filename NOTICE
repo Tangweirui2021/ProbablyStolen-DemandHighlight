@@ -1,0 +1,9 @@
+Type Demand & Risk Stars (WRT fork)
+Based on Demand Highlight by KCN-judu, Apache License 2.0.
+Upstream: https://github.com/KCN-judu/ProbablyStolen-DemandHighlight
+Base commit: ee0e791669833239a3c636aeeb20810970ecf3e6
+
+This fork changes the demand-outline palette to item types and adds independent,
+permanent risk stars for every registered item view. Original copyright and
+license notices remain applicable. The game and its assets belong to their owners.
+No game binaries are distributed with this source.

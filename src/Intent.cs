@@ -62,10 +62,11 @@ namespace DemandHighlight
 
         // The query for what is at the counter now (or what the filter asks for). Also remembers the customer the
         // query's questions are about, for Ask.
+        // clientGoods is retained in this internal signature; risk display is now global and independent.
         public static Query Read(StoreClient client, bool clientGoods)
         {
             asked = client;
-            return Intent.Distill(View(client), FilterState(), clientGoods);
+            return Presentation.DemandQuery(View(client), FilterState());
         }
 
         public static ClientView View(StoreClient c)

@@ -1,17 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Manifest>
-  <ID>demand_highlight</ID>
-  <Name>Demand Highlight</Name>
-  <Author>KCN-judu</Author>
-  <ModVersion>1.2.0</ModVersion>
-  <Description>Outlines what the customer at the counter wants: green line = wanted, amber caution tape = stolen, red double line = contraband, corner brackets = something wanted is inside. Machine storage tabs are marked too, and during inspections only stolen goods and contraband are shown. An Item Filter window marks your stock by type, stolen or contraband. It only recalculates when something changes. Bind its keys in the game's options menu.</Description>
+  <ID>wrt_type_demand_stars</ID>
+  <Name>Type Demand &amp; Risk Stars</Name>
+  <Author>WRT fork; based on KCN-judu</Author>
+  <ModVersion>1.0.0-wrt.1</ModVersion>
+  <Description>Demand outlines colored by item type, with one container-hint color. Independent permanent pixel stars on all item views: yellow stolen, green contraband, red both. Colors, thickness, rounding, fill and star size are configurable in the native Mods settings panel. Disable the original Demand Highlight when using this fork.</Description>
   <GameVersions>
     <Version>0.46D</Version>
   </GameVersions>
   <AssetOrigin>333b8b44-6be8-47c9-bdfe-51a020b2bad2</AssetOrigin>
   <Prerequisites />
   <Assemblies>
-    <Assembly>DemandHighlight.dll</Assembly>
+    <Assembly>TypeDemandStars.dll</Assembly>
   </Assemblies>
   <Capabilities />
 </Manifest>

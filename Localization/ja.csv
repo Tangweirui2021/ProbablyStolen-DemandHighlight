@@ -1,16 +1,14 @@
-# Demand Highlight - 日本語 (ja)
+# Type Demand & Risk Stars - 日本語 (ja)
 opt_thickness,枠線の太さ
 opt_thickness_tip,線の幅（UIピクセル単位）。
 opt_corner,角の丸み
 opt_corner_tip,外側の角の丸みの半径。0で直角。
 opt_fill,欲しい品物に色を付ける
 opt_fill_tip,欲しい品物の枠内に薄い色を重ねます。
-opt_goods,客の持ち込み品をマーク
-opt_goods_tip,客が売りに来たとき、盗品と禁制品をマークします。
 opt_numbers,アイテムフィルターに数値を表示
 opt_numbers_tip,アイテムフィルターに該当アイテムの個数・総額・占有マス数・1マスあたりの価値を表示します。
 opt_key,需要ハイライトの切り替え
-opt_key_tip,枠線の表示を切り替えます。
+opt_key_tip,Turns demand/filter outlines on and off. Permanent risk stars are independent.
 opt_panel_key,アイテムフィルターを開く
 opt_panel_key_tip,種類や盗品・禁制品でアイテムをマークするウィンドウを開きます。
 window_title,アイテムフィルター
@@ -26,7 +24,7 @@ fam_legal,規制品
 fam_other,その他
 tip_stolen,盗品だけ。種類にチェックがあればその種類の盗品。禁制品にもチェックがあればどちらか一方。フィルター中は客の需要ハイライトが止まります。もう一度クリックで除外（✗）、さらにもう一度で解除します。
 tip_contraband,禁制品だけ。種類にチェックがあればその種類の禁制品。盗品にもチェックがあればどちらか一方。フィルター中は客の需要ハイライトが止まります。もう一度クリックで除外（✗）、さらにもう一度で解除します。
-tip_type,「#」のアイテムをシアンでマークします。複数の種類はいずれか一つを意味します。数字はほかの条件を加えたうえでこの項目が見つける数です。もう一度クリックで除外（✗）、さらにもう一度で解除します。
+tip_type,Marks # matching items with their configured type colors. Click again to exclude; once more to untick.
 tip_clear,フィルターを空にして客の需要ハイライトに戻ります。
 expr_placeholder,下でチェックするか入力：type:food -stolen
 tip_expr,ここがフィルターそのものです。下のチェックはここに書き込まれ、入力した内容にも追従します。語：stolen、contraband、owned、種類名。キー：type: tag: id: condition:。and / or / not（+ | -）と括弧で組み合わせます。
@@ -44,3 +42,14 @@ stats_shop,店全体 {n} 個　総額 {v}　{c} マス　1マスあたり {d}
 stats_match,該当 {n} 個　総額 {v}（店全体の {p}）　{c} マス　1マスあたり {d}（店全体 {a}）
 short_form,短縮
 tip_short_form,and or not の代わりに + | - でフィルターを書きます。どちらの書き方も常に読めます。
+opt_default_color,Fallback outline color
+opt_container_color,Container hint color
+opt_stolen_color,Stolen-only star color (yellow)
+opt_contraband_color,Contraband-only star color (green)
+opt_both_color,Stolen + contraband star color (red)
+opt_star_edge,Pixel star outline color
+opt_stars,Always mark stolen goods and contraband
+opt_star_scale,Star pixel scale
+opt_star_inset,Star corner inset
+opt_type_priority,Item type priority (comma-separated IDs)
+opt_hex_tip,Use #RRGGBB or #RRGGBBAA. An invalid value uses the last valid color (the default after restarting).

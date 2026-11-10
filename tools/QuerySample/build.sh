@@ -1,28 +1,21 @@
 #!/usr/bin/env bash
-# Builds the query sample against the game's assemblies; --install copies it to the game's Mods folder.
-# It compiles api/DemandHighlightQuery.cs into the mod, as another mod using the API does: no reference to
-# Demand Highlight's assembly.
-#   GAME=/d/SteamLibrary/steamapps/common/"Probably Stolen" CSC=/path/to/csc.exe tools/QuerySample/build.sh [--install]
+# Optional query API sample, built with the same .NET SDK as the fork.
 set -euo pipefail
-cd "$(dirname "$0")"
-GAME="${GAME:-/d/SteamLibrary/steamapps/common/Probably Stolen}"
-M="$GAME/Probably Stolen_Data/Managed"
-CSC="${CSC:-/c/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/Roslyn/csc.exe}"
-OUT=../../out/query_sample
-mkdir -p "$OUT"
-refs=()
-for r in mscorlib netstandard System System.Core Assembly-CSharp UnityEngine UnityEngine.CoreModule; do
-  [ -f "$M/$r.dll" ] && refs+=("-r:$M/$r.dll")
+cd "$(dirname "$0")/../.."
+DOTNET="${DOTNET:-dotnet}"
+GAME="${GAME:-}"
+install=0
+for arg in "$@"; do
+  if [[ "$arg" == --install ]]; then install=1
+  else printf 'Unknown argument: %s\n' "$arg" >&2; exit 2; fi
 done
-WORK="${TEMP:-/tmp}/qsample_build"
-rm -rf "$WORK" && mkdir -p "$WORK"
-cp QuerySample.cs ../../api/DemandHighlightQuery.cs "$WORK/"
-( cd "$WORK" && "$CSC" -nologo -nostdlib -noconfig -target:library -optimize+ -warn:4 -nowarn:1701,1702 \
-  "${refs[@]}" -out:QuerySample.dll QuerySample.cs DemandHighlightQuery.cs )
-cp "$WORK/QuerySample.dll" manifest.xml "$OUT/"
-echo "built out/query_sample"
-if [ "${1:-}" = "--install" ]; then
-  rm -rf "$GAME/Mods/query_sample"
-  cp -r "$OUT" "$GAME/Mods/"
-  echo "installed to $GAME/Mods/query_sample"
+if [[ -z "$GAME" ]]; then
+  printf '%s\n' 'Set GAME to the current game install directory.' >&2
+  exit 2
+fi
+"$DOTNET" build tools/QuerySample/QuerySample.csproj -c Release "-p:GamePath=$GAME" --nologo
+if ((install)); then
+  mkdir -p "$GAME/Mods/query_sample"
+  cp -R out/query_sample/. "$GAME/Mods/query_sample/"
+  printf '%s\n' "Installed optional development sample to $GAME/Mods/query_sample"
 fi

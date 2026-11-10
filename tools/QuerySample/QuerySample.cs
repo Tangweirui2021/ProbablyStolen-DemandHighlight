@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace QuerySample
 {
-    // A development mod that uses Demand Highlight's query API the way another mod would: through the copied client
+    // A development mod that uses the fork's inherited Demand Highlight query API the way another mod would: through the copied client
     // file (api/DemandHighlightQuery.cs), with no reference to Demand Highlight. Each time a shop loads, it runs a few
     // queries and writes the answers to Player.log:
     //
@@ -13,7 +13,7 @@ namespace QuerySample
     //   [QuerySample] stolen and shiny -> Invalid UnknownWord 'shiny' at 11
     //   [QuerySample] short form: not stolen and type:(food or medical) -> -stolen + type:(food | medical)
     //
-    // With Demand Highlight off, it writes "query API not available" once and does nothing else. It never draws
+    // With the API provider (this fork) off, it writes "query API not available" once and does nothing else. It never draws
     // anything and keeps no item after the line is written. Not part of the released mod; build it with
     // tools/QuerySample/build.sh.
     public sealed class QuerySampleMod : IMod

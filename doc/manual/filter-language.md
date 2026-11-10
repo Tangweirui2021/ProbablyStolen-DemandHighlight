@@ -1,5 +1,9 @@
 # Filter language
 
+[简体中文](../zh-CN/filter-language.md) · [Documentation index](../README.md)
+
+This inherited expression language chooses matches. Frame colors are configured separately by item type; the permanent risk-star registry is independent.
+
 The [Item Filter](item-filter.md)'s box takes a small language. This page is its full definition. `tests/LanguageTest.cs` checks every rule here; when one changes, both change.
 
 ## Words and symbols

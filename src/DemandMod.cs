@@ -6,8 +6,8 @@ using UnityEngine.SceneManagement;
 
 namespace DemandHighlight
 {
-    // Outlines what the current customer wants: green = wanted, amber = stolen, red = contraband, corner
-    // brackets = wanted things are inside. During an inspection only stolen goods and contraband are marked.
+    // Type-colored customer/filter demand outlines and one-color contents hints. Independent permanent
+    // risk stars mark all registered native item views: yellow stolen, green contraband, red both.
     //
     // The mod is three parts that only pass data along:
     //   front (Intent.Pure.cs, GameIntent): what the customer or the item filter asks for, as a Query value;
@@ -22,18 +22,18 @@ namespace DemandHighlight
     //
     // Leaving the store releases everything kept from it (see Release).
     //
-    // This file is the entry point (IMod): it installs the Harmony postfixes that only mark work as needed, reads the
+    // This file is the entry point (IMod): it registers global item views, installs the Harmony postfixes, reads the
     // options and key bindings (ModHelper.GetConfig, ModHelper.AddGameOptionKeyBind), and runs Tick once per frame
     // through Ticker. Patched game types: GameItemElement (Validate, RotCW, RotCCW), GameItem (the tag methods,
     // SetGameItemType, AddParent, RemoveParent) and PixelWindow (Show, Hide). All patches are postfixes and none
     // changes a result.
     public sealed class DemandMod : IMod
     {
-        public const string ModId = "demand_highlight";
+        public const string ModId = "wrt_type_demand_stars";
         const string HarmonyId = "mod." + ModId;
-        internal const string Tag = "[DemandHighlight] ";
-        const string HotkeyPref = "DemandHighlight.hotkey";
-        const string PanelKeyPref = "DemandHighlight.panelKey";
+        internal const string Tag = "[TypeDemandStars] ";
+        const string HotkeyPref = "WRT.TypeDemandStars.hotkey";
+        const string PanelKeyPref = "WRT.TypeDemandStars.panelKey";
         // No default keys: both are bound in the game's options menu (keybind section).
         const KeyCode DefaultKey = KeyCode.None, DefaultPanelKey = KeyCode.None;
         // MinGap: shortest time between two walks. QueryPoll: how often the query is read between walks, because the
@@ -49,7 +49,7 @@ namespace DemandHighlight
         static Harmony harmony;
         static GameObject ticker;
         static ConfigEntry<int> thickness, corner;
-        static ConfigEntry<bool> clientGoods, fill, filterNumbers;
+        static ConfigEntry<bool> fill, filterNumbers;
         static bool optionsAdded;
 
         // on: the player's toggle. dirty: something changed since the last walk. drawn: outlines are currently shown.
@@ -63,7 +63,6 @@ namespace DemandHighlight
         static readonly System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
         static StoreClient lastClient;
         static KeyCode toggleKey = DefaultKey, panelKey = DefaultPanelKey;
-        static bool filtering;
         static bool warned;
 
         // The game passes the manifest; its ID is the key for localized text and options, so it is read instead of ModId.
@@ -115,11 +114,17 @@ namespace DemandHighlight
                 // goes through a Type it cannot see.
                 var h = new Harmony(HarmonyId);
                 harmony = h;
-                var mark = Hook("MarkDirty");
+                var mark = Hook("ElementChanged");
                 var changed = Hook("ItemChanged");
                 var moved = Hook("ItemMoved");
                 var tagged = Hook("TagChanged");
                 var window = Hook("WindowChanged");
+                // Register every item view, regardless of location/scene/customer. A GameItemElement is a game
+                // model with a UI handle, not necessarily a Unity Component, so don't FindObjectsOfType it.
+                var created = Hook("ElementCreated");
+                var constructors = typeof(GameItemElement).GetConstructors(AnyInstance);
+                if (constructors.Length == 0) throw new MissingMethodException("GameItemElement constructors not found");
+                foreach (var constructor in constructors) h.Patch(constructor, null, created);
                 Patch(h, typeof(GameItemElement).GetMethod("Validate", AnyInstance, null, Type.EmptyTypes, null), "GameItemElement.Validate", changed);
                 Patch(h, typeof(GameItem).GetMethod("EnableTag", AnyInstance, null, new[] { typeof(string), typeof(bool) }, null), "GameItem.EnableTag", tagged);
                 Patch(h, typeof(GameItem).GetMethod("DisableTag", AnyInstance, null, new[] { typeof(string), typeof(bool) }, null), "GameItem.DisableTag", tagged);
@@ -177,6 +182,7 @@ namespace DemandHighlight
             }
             if (ticker != null) { UnityEngine.Object.Destroy(ticker); ticker = null; }
             try { Painter.DestroyAll(); } catch (Exception) { }
+            try { RiskStars.DestroyAll(); } catch (Exception) { }
             try { Sprites.Clear(); } catch (Exception) { }
             try { Panel.Destroy(); } catch (Exception) { }
             try { Marks.Release(); } catch (Exception) { }
@@ -188,6 +194,8 @@ namespace DemandHighlight
         // after leaving the store; the decision itself is StoreExit.Left, with a headless test).
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            // Stars also exist outside the store, and must survive an additive scene or UI opening.
+            if (mode == LoadSceneMode.Single) RiskStars.ReleaseViews();
             if (!StoreExit.Left(scene.name, mode == LoadSceneMode.Single)) return;
             try { Release(); }
             catch (Exception e) { Debug.LogWarning(Tag + "releasing the store failed: " + e.Message); }
@@ -209,11 +217,13 @@ namespace DemandHighlight
             dirty = true;
         }
 
-        static void MarkDirty() { dirty = true; }
+        static void ElementCreated(GameItemElement __instance) { RiskStars.Track(__instance); }
+        static void ElementChanged(GameItemElement __instance) { RiskStars.Track(__instance); dirty = true; }
 
         // An item changed: what is kept about it, and the insides of the containers above it, are stale.
         static void ItemChanged(GameItem __instance)
         {
+            RiskStars.Changed(__instance);
             dirty = true;
             Engine.Forget(__instance);
         }
@@ -221,6 +231,7 @@ namespace DemandHighlight
         // A tag changed: as above, and the filter counts are stale.
         static void TagChanged(GameItem __instance)
         {
+            RiskStars.Changed(__instance);
             dirty = true;
             Filter.StockVersion++;
             Engine.Forget(__instance);
@@ -230,6 +241,7 @@ namespace DemandHighlight
         // the containers it left or entered are stale.
         static void ItemMoved(GameItem __instance, GraphNodeStorage node)
         {
+            RiskStars.Changed(__instance);
             dirty = true;
             Filter.StockVersion++;
             Engine.Forget(__instance);
@@ -264,6 +276,7 @@ namespace DemandHighlight
             catch (Exception) { panelKey = DefaultPanelKey; }
             Panel.L = L;
             Panel.Changed = () => { dirty = true; nextAllowed = 0f; };
+            MarkerSettings.Init(modId, L, Restyle);
 
             if (optionsAdded) return;
             optionsAdded = true;
@@ -273,11 +286,9 @@ namespace DemandHighlight
                 thickness = config.Define("lineThickness", 2, "General", () => L("opt_thickness"), 1, 6, () => L("opt_thickness_tip"), false);
                 corner = config.Define("cornerRadius", 2, "General", () => L("opt_corner"), 0, 8, () => L("opt_corner_tip"), false);
                 fill = config.Define("fillTint", true, "General", () => L("opt_fill"), () => L("opt_fill_tip"), false);
-                clientGoods = config.Define("highlightClientGoods", false, "General", () => L("opt_goods"), () => L("opt_goods_tip"), false);
                 thickness.OnChanged += _ => Restyle();
                 corner.OnChanged += _ => Restyle();
                 fill.OnChanged += _ => Restyle();
-                clientGoods.OnChanged += _ => dirty = true;
                 filterNumbers = config.Define("filterNumbers", true, "General", () => L("opt_numbers"), () => L("opt_numbers_tip"), false);
                 filterNumbers.OnChanged += on => Panel.SetNumbers(on);
                 Panel.Numbers = () => filterNumbers == null || filterNumbers.Value;
@@ -313,10 +324,12 @@ namespace DemandHighlight
             dirty = true;
         }
 
-        // One frame of the mod: hotkeys, then the query, then at most one time-limited walk. A walk happens only when
+        // One frame: independent global risk stars, then demand hotkeys/query and at most one time-limited demand walk. A walk happens only when
         // dirty is set and MinGap has passed.
         internal static void Tick()
         {
+            // Permanent risk badges are independent of the demand hotkey, filter and presence of a store/client.
+            RiskStars.Tick();
             try
             {
                 // Not while a key is being bound, nor while the filter's box is being typed in.
@@ -339,15 +352,6 @@ namespace DemandHighlight
                     return;
                 }
 
-                // Switching between the customer highlight and the item filter recolours plain matches.
-                if (Filter.Active != filtering)
-                {
-                    filtering = Filter.Active;
-                    Painter.Filtering = filtering;
-                    Sprites.Clear();
-                    dirty = true;
-                }
-
                 float now = Time.unscaledTime;
                 var client = GameIntent.CurrentClient();
                 if (client != lastClient) { lastClient = client; dirty = true; nextAllowed = 0f; nextPoll = 0f; }
@@ -357,7 +361,7 @@ namespace DemandHighlight
                 if (due || now >= nextPoll)
                 {
                     nextPoll = now + QueryPoll;
-                    var q = GameIntent.Read(client, clientGoods != null && clientGoods.Value);
+                    var q = GameIntent.Read(client, false);
                     if (!q.Equals(query))
                     {
                         query = q;

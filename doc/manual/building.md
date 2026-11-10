@@ -1,28 +1,63 @@
-# Building
+# Building and installation
 
+[简体中文](../zh-CN/building.md) · [Documentation index](../README.md)
 
-## Requirements
+## Requirements and current status
 
-- *Probably Stolen*, game version 0.46D. The build compiles against the game's own assemblies in `Probably Stolen_Data/Managed`.
-- Git Bash or another POSIX shell on Windows.
-- The Roslyn C# compiler from Visual Studio Build Tools. The C# 5 compiler that ships with Windows cannot read some of the game's types.
+- .NET SDK 8 or newer. Pure-data/integration tests target .NET 8; game mods target `netstandard2.1`.
+- A copy of the current game and its `Probably Stolen_Data/Managed` folder.
+- Linux/macOS shell, Git Bash, or PowerShell for the wrapper scripts.
 
-## Build
+No game files or installable release DLL are distributed in this source repository. The upstream `0.46D` manifest declaration is retained until real-version validation is available. A stand-in test build is not a release DLL.
+
+## Main mod
+
+From the repository root:
 
 ```bash
-./build.sh            # out/demand_highlight
-./build.sh --install  # also copies it to the game's Mods folder
+GAME='/path/to/Probably Stolen' ./build.sh
+GAME='/path/to/Probably Stolen' ./build.sh --install
 ```
 
-Two environment variables override the defaults:
+On Windows:
 
-| Variable | Default |
-| --- | --- |
-| `GAME` | `/d/SteamLibrary/steamapps/common/Probably Stolen` |
-| `CSC` | the Roslyn `csc.exe` of Visual Studio 18 Build Tools |
+```powershell
+./build.ps1 -GamePath 'D:\SteamLibrary\steamapps\common\Probably Stolen'
+./build.ps1 -GamePath 'D:\SteamLibrary\steamapps\common\Probably Stolen' -Install
+```
 
-## Install by hand
+Direct SDK invocation, including the case where only the Managed folder is available:
 
-Copy the folder `out/demand_highlight` into the game's `Mods` folder, start the game, and enable the mod in the Mods menu. Mods load when the game starts, so restart after enabling or updating one.
+```bash
+dotnet build TypeDemandStars.csproj -c Release -p:GamePath='/path/to/Probably Stolen'
+dotnet build TypeDemandStars.csproj -c Release -p:GameManagedDir='/path/to/Managed'
+```
 
-The mod declares no capabilities, so the game enables it without a permission prompt.
+The project fails early when `Assembly-CSharp.dll` is missing. It references the player's assemblies without copying them to output. No Visual Studio Build Tools `CSC` variable is needed.
+
+Output: `out/wrt_type_demand_stars/`, containing `TypeDemandStars.dll`, its manifest, localization and notices. Do not install binaries from `tests/bin/`.
+
+## Activate and update
+
+Copy the entire output folder into `<game>/Mods/` if not using `--install`/`-Install`. Disable the original Demand Highlight and overlapping marker mods, enable **Type Demand & Risk Stars** in the game's Mods menu, then restart.
+
+The source fork has no separate Workshop subscription yet; the original author's subscription installs the original mod. Updates replace the fork's install folder; saved settings remain in the game's external `ModConfigs` folder.
+
+## Tests
+
+```bash
+./tests/run.sh
+python3 tools/check_docs.py
+```
+
+The first command runs 12 pure-data suites and production-code integration against explicitly labelled stand-in APIs; it needs no game files. It does not validate actual game assembly compatibility, Harmony patching, Unity rotation or clipping. See [VALIDATION.md](../../VALIDATION.md).
+
+## Query sample for mod authors
+
+The optional development mod exercises the inherited query API and logs results in `Player.log`. It is not part of the player's mod output:
+
+```bash
+GAME='/path/to/Probably Stolen' ./tools/QuerySample/build.sh --install
+```
+
+It uses the same .NET SDK and game-assembly requirements. Enable the fork and the Query Sample to exercise the API; see [Query API](query-api.md).

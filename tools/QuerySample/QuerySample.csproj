@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>QuerySample</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GamePath Condition="'$(GamePath)' == ''">$(GAME)</GamePath>
+    <GameManagedDir Condition="'$(GameManagedDir)' == ''">$(GamePath)/Probably Stolen_Data/Managed</GameManagedDir>
+    <OutputPath>$(MSBuildProjectDirectory)/../../out/query_sample/</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="QuerySample.cs;../../api/DemandHighlightQuery.cs" />
+    <Reference Include="$(GameManagedDir)/*.dll"><Private>false</Private></Reference>
+    <Content Include="manifest.xml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+  </ItemGroup>
+  <Target Name="CheckGameAssemblies" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GameManagedDir)/Assembly-CSharp.dll')" Text="Game assemblies are missing. Pass GamePath or GameManagedDir for your current game." />
+  </Target>
+</Project>

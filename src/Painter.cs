@@ -18,14 +18,6 @@ namespace DemandHighlight
         // Hidden outlines kept for reuse; above this many the hidden ones are destroyed.
         const int HiddenCap = 400;
 
-        static readonly Color Green = new Color(0.36f, 0.92f, 0.42f, 0.95f);
-        static readonly Color Amber = new Color(1f, 0.72f, 0.12f, 0.95f);
-        static readonly Color Red = new Color(1f, 0.25f, 0.22f, 0.95f);
-        static readonly Color Cyan = new Color(0.35f, 0.82f, 1f, 0.95f);
-
-        // While the item filter is on, a plain match is drawn in cyan so it is not mistaken for a customer's wish.
-        public static bool Filtering;
-
         // One outline: its UI objects, and the state it was last drawn with, so Item can skip a redraw that would change nothing.
         sealed class Frame
         {
@@ -38,6 +30,7 @@ namespace DemandHighlight
             public bool Visible;
             // What is drawn now.
             public Style Style;
+            public Color Color;
             public object Shape;
             public int Orientation, W, H, Generation;
             public bool Flipped, Drawn;
@@ -88,11 +81,6 @@ namespace DemandHighlight
             next.Clear();
         }
 
-        public static Color ColorOf(Mark mark)
-        {
-            return mark == Mark.Contraband ? Red : mark == Mark.Stolen ? Amber : Filtering ? Cyan : Green;
-        }
-
         // Outlines one item. A turned item is drawn in its rotator whose rect is the item before turning, so the
         // shape cells read from the game apply as they are; a mirrored item gets a mirrored texture.
         static void Item(GameItemElement element, Style style)
@@ -120,13 +108,15 @@ namespace DemandHighlight
             var frame = Ensure(element, anchor);
             if (frame == null) return;
             Show(frame);
+            RiskStars.BringToFront(element);
+            var color = MarkerSettings.Outline(element.itemTypes, style.Contents);
             if (frame.Drawn && frame.Style.Equals(style) && frame.Shape == shape && frame.Orientation == orientation &&
-                frame.Flipped == flipped && frame.W == w && frame.H == h && frame.Generation == Sprites.Generation)
+                frame.Flipped == flipped && frame.W == w && frame.H == h && frame.Generation == Sprites.Generation && frame.Color == color)
                 return;
 
             var cells = shape != null && (orientation == 0 || inRotator) ? Sprites.Read(shape) : Sprites.Full;
-            if (cells.Hash == Sprites.Full.Hash) DrawFrame(frame, style, Corner);
-            else Draw(frame, Sprites.Get(cells, w, h, style, Thickness, Corner, Fill), style, inRotator && flipped ? -1f : 1f);
+            if (cells.Hash == Sprites.Full.Hash) DrawFrame(frame, style, Corner, color);
+            else Draw(frame, Sprites.Get(cells, w, h, style, Thickness, Corner, Fill), style, inRotator && flipped ? -1f : 1f, color);
             frame.Shape = shape; frame.Orientation = orientation; frame.Flipped = flipped; frame.W = w; frame.H = h;
         }
 
@@ -139,6 +129,9 @@ namespace DemandHighlight
             {
                 var style = marks.Pages[i];
                 if (style.Mark == Mark.None) continue;
+                // A storage tab is another container hint, never an item's product category or legal status.
+                style = new Style(Mark.Normal, true);
+                var color = MarkerSettings.ContainerColor;
 
                 var plate = plates[i];
                 var rect = plate.rect;
@@ -148,9 +141,9 @@ namespace DemandHighlight
                 if (frame == null) continue;
                 Show(frame);
                 if (frame.Drawn && frame.Style.Equals(style) && frame.W == w && frame.H == h &&
-                    frame.Generation == Sprites.Generation)
+                    frame.Generation == Sprites.Generation && frame.Color == color)
                     continue;
-                DrawFrame(frame, style, Mathf.Min(Corner, 2));
+                DrawFrame(frame, style, Mathf.Min(Corner, 2), color);
                 frame.W = w; frame.H = h;
             }
         }
@@ -180,7 +173,7 @@ namespace DemandHighlight
 
         // A rectangle: the shared nine-slice frame, sliced (or tiled, so the stripes keep their pitch), with one
         // texel per UI unit.
-        static void DrawFrame(Frame frame, Style style, int corner)
+        static void DrawFrame(Frame frame, Style style, int corner, Color color)
         {
             var image = frame.Image;
             image.sprite = Sprites.Frame(style, Thickness, corner, Fill);
@@ -189,21 +182,22 @@ namespace DemandHighlight
             var canvas = image.canvas;
             float reference = canvas != null && canvas.referencePixelsPerUnit > 0f ? canvas.referencePixelsPerUnit : 100f;
             image.pixelsPerUnitMultiplier = Mathf.Clamp(reference / 100f, 0.01f, 100f);
-            Finish(frame, style, 1f);
+            Finish(frame, style, 1f, color);
         }
 
         // Any other shape: a texture drawn for its exact size.
-        static void Draw(Frame frame, Sprite sprite, Style style, float mirror)
+        static void Draw(Frame frame, Sprite sprite, Style style, float mirror, Color color)
         {
             frame.Image.type = Image.Type.Simple;
             frame.Image.pixelsPerUnitMultiplier = 1f;
             frame.Image.sprite = sprite;
-            Finish(frame, style, mirror);
+            Finish(frame, style, mirror, color);
         }
 
-        static void Finish(Frame frame, Style style, float mirror)
+        static void Finish(Frame frame, Style style, float mirror, Color color)
         {
-            frame.Image.color = ColorOf(style.Mark);
+            frame.Image.color = color;
+            frame.Color = color;
             frame.Rect.localScale = new Vector3(mirror, 1f, 1f);
             frame.Style = style;
             frame.Generation = Sprites.Generation;

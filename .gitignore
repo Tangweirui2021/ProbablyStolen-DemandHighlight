@@ -3,3 +3,6 @@
 build.log
 # Stray build artifacts at the repository root
 /*.dll
+**/bin/
+**/obj/
+/.tools/

@@ -1,3 +1,20 @@
+# WRT fork changelog
+
+## 1.0.0-wrt.1
+
+- Demand outlines use item type palettes, independent of legal status.
+- Container hints keep corner brackets and one configurable color.
+- All registered native item views get independent permanent risk stars, including outside the shop.
+- Added native config entries for every marker color, type priority, star size and inset.
+- Preserved outline geometry, fill, filters, query API and existing hotkeys.
+- Added a portable SDK build and pure/stand-in integration tests.
+- Real-game assembly build and gameplay validation are pending; no new compatibility claim.
+- Replaced outdated upstream player instructions with current Chinese/English manuals, configuration tables and build steps.
+- Added documentation checks and fork-owned CI; the optional query sample now uses the portable SDK build.
+
+---
+
+# Upstream changelog
 # Changelog
 
 ## 1.2.0

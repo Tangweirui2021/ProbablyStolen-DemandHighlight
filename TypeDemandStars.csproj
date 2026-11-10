@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>TypeDemandStars</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GamePath Condition="'$(GamePath)' == ''">$(GAME)</GamePath>
+    <GameManagedDir Condition="'$(GameManagedDir)' == ''">$(GamePath)/Probably Stolen_Data/Managed</GameManagedDir>
+    <OutputPath>$(MSBuildProjectDirectory)/out/wrt_type_demand_stars/</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src/*.cs" />
+    <Reference Include="$(GameManagedDir)/*.dll"><Private>false</Private></Reference>
+    <Content Include="manifest.xml;preview.png;Localization/*.csv;LICENSE;NOTICE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Target Name="CheckGameAssemblies" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GameManagedDir)/Assembly-CSharp.dll')"
+           Text="Game assemblies are missing. Pass -p:GamePath=&quot;/path/to/Probably Stolen&quot; or -p:GameManagedDir=&quot;/path/to/Managed&quot;." />
+  </Target>
+</Project>

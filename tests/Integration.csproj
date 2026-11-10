@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems><LangVersion>latest</LangVersion>
+    <NoWarn>0067;0649</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../src/*.Pure.cs;../src/MarkerSettings.cs;../src/RiskStars.cs;../src/Painter.cs;../src/Sprites.cs;../src/Engine.cs;../src/Intent.cs;../src/DemandMod.cs" />
+    <Compile Include="integration/*.cs" />
+  </ItemGroup>
+</Project>

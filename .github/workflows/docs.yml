@@ -1,13 +1,20 @@
-name: Documentation
+name: Documentation and headless checks
 
 on:
   push:
     branches: [main]
-    paths: ['doc/**', '.github/workflows/docs.yml']
   pull_request:
-    paths: ['doc/**', '.github/workflows/docs.yml']
   workflow_dispatch:
 
 jobs:
-  docs:
-    uses: KCN-judu/ProbablyStolen-Mods/.github/workflows/check-docs.yml@main
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python3 tools/check_docs.py
+      - run: bash tests/run.sh

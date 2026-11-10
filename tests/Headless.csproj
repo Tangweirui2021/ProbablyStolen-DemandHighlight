@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TestName Condition="'$(TestName)' == ''">PresentationTest</TestName>
+    <AssemblyName>$(TestName)</AssemblyName>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../src/*.Pure.cs" />
+    <Compile Include="$(TestName).cs" />
+    <Compile Include="../api/DemandHighlightQuery.cs" Condition="'$(TestName)' == 'QueryApiTest'" />
+  </ItemGroup>
+</Project>

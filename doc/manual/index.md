@@ -1,43 +1,34 @@
-# Demand Highlight
+# Marker behavior
 
-See at a glance what the customer at the counter wants, in the shop inventories, in open containers and on machine storage tabs.
+[简体中文](../zh-CN/index.md) · [Documentation index](../README.md)
 
-![Demand Highlight cover](../attachments/cover.png)
+Type Demand & Risk Stars has two independent presentation layers.
 
-## Outlines
+## Demand outlines
 
-| Look | Meaning |
+The original customer acceptance checks decide whether to mark an item. The displayed full outline is a solid line, optionally with a faint fill; its color comes only from the item's selected product type. A stolen food item and an ordinary food item with the same selected type get the same frame.
+
+A container that is not accepted itself but holds a match gets corner brackets in the single configured container color. Storage tabs use that color and corner-hint style too. If the container itself is accepted, it gets its own type-colored full frame.
+
+Customer-demand highlighting retains the original rules for locked/behind-lock or immovable items, whole-container acceptance, barter, variety buyers and flexi buyers. A flexi buyer is marked after choosing what it wants. The manual filter has its own lock-independent matching rules.
+
+Inspections do not add legal-status outlines. Risk is represented by the independent star layer.
+
+## Permanent risk stars
+
+| Item's own status | Default star |
 | --- | --- |
-| Green line with a faint fill | Wanted |
-| Amber diagonal "caution tape" | Wanted, and stolen |
-| Red heavy line with a thin inner line | Wanted, and contraband |
-| Corner brackets in one of those colours | Not wanted itself, but something wanted is inside |
+| Neither | None |
+| Stolen only | Yellow |
+| Contraband only | Green |
+| Both | One red star |
 
-Outlines follow each item's grid cells, so an L-shaped item gets an L-shaped outline. Patterns as well as colours tell the styles apart.
+Stars are registered through native `GameItemElement` creation and validation, independent of shop inventory roots. This includes native item views for customer goods, counters, showcases, containers, machines and other scenes. No customer is required. Hiding demand/filter outlines does not hide or stop updating stars.
 
-![The four outline styles](../attachments/outline-styles.png)
+A container's star describes its own status, not an aggregate of its contents. The star is attached to the outer item-view rectangle rather than its internal rotator, uses an integer-scaled pixel mask, and ignores pointer input/layout. Actual game rotation, mirroring and clipping remain unverified.
 
-## Rules
+## Configuration and compatibility
 
-- Locked containers, items behind a lock and immovable items are skipped, as the customer would see them.
-- During an inspection, only stolen goods and contraband are marked, and containers that block a search are skipped.
-- When a customer is selling, their own stolen goods and contraband are marked only if the option is on. It is off by default.
-- A customer who barters is shown the items of yours that meet any of their terms. A container counts on its own, whatever is inside it.
-- A customer who wants variety stops wanting a kind of item as soon as you sell them one.
-- The flexi buyer arrives without wanting anything and picks a kind of goods when its first words end. Nothing is marked until then.
+All marker colors, type priority, rounding, thickness, fill, star pixel scale and corner inset are configurable. See [Configuration](configuration.md).
 
-## Options
-
-| Option | Default | What it does |
-| --- | --- | --- |
-| Outline thickness | 2 | Line width in UI pixels, from 1 to 6. |
-| Corner rounding | 2 | Radius of the rounded outer corners, from 0 to 8. |
-| Tint wanted items | on | A faint fill inside the outline of wanted items. |
-| Mark the customer's own goods | off | When a customer is selling, mark their stolen goods and contraband. |
-| Numbers in the item filter | on | The line of numbers in the [Item Filter](item-filter.md): items, worth, cells and worth per cell. Off also skips adding them up. |
-| Toggle demand highlight | unbound | A key that turns the outlines on and off, the Item Filter's marks included. |
-| Open item filter | unbound | A key that opens the [Item Filter](item-filter.md) window. |
-
-Neither key has a default. Bind them in the game's options menu.
-
-If you use another demand-highlight mod, turn it off, or both will draw outlines.
+Disable the original Demand Highlight and overlapping marker mods. The fork uses a separate mod ID but shares the legacy query API contract, so enabling both providers is unsupported. See [Building](building.md) for the current source-only status and required real-game validation.

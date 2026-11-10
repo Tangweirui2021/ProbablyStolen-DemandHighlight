@@ -1,5 +1,7 @@
 # Item Filter
 
+[简体中文](../zh-CN/item-filter.md) · [Documentation index](../README.md)
+
 The Item Filter marks your own stock by type, stolen or contraband, or by anything you can write as an expression, whoever is at the counter. Use it to sort the shop.
 
 ## Opening it
@@ -81,11 +83,11 @@ Examples:
 ## Marking
 
 - Every matching item in the shop is marked until you clear the filter.
-- Type matches are drawn in cyan with the solid style. Stolen goods and contraband keep their amber and red styles.
-- Containers holding matches get corner brackets.
+- Matches use the configured product-type color and solid frame, regardless of legal status. Permanent risk stars remain independent of the filter.
+- Containers holding matches get corner brackets in the single configured container color; machine storage tabs use it too.
 - Locks are ignored, because the filter is for sorting your own stock.
 
-Turning the filter on pauses the customer highlight, and clearing it brings the highlight back. While you type in the box, the mod's own keys do nothing.
+Turning the filter on pauses the customer highlight, and clearing it brings the highlight back. Permanent risk stars continue while filtering and while demand/filter outlines are hidden. While you type in the box, the mod's own keys do nothing.
 
 ## Texture packs
 
@@ -93,4 +95,4 @@ The ✗ can be replaced by a texture pack. Its file is named
 
 `333b8b44-6be8-47c9-bdfe-51a020b2bad2+Code~filter_exclude.png`
 
-and is the whole box with the ✗ in it, 13 by 13 pixels, the size of the game's checkbox pictures; `textures.schema.tsv` in the mod's folder lists it. Without such a file, the ✗ is found by comparing the game's checked and empty boxes and drawn into the empty one, so a pack that only redraws the checkbox gets a matching ✗ for free. The ✓ is the game's own and is replaced like any of the game's pictures.
+and is the whole box with the ✗ in it, 13 by 13 pixels, the size of the game's checkbox pictures; [`textures.schema.tsv`](../../textures.schema.tsv) in this source repository lists it for pack authors. Without such a file, the ✗ is found by comparing the game's checked and empty boxes and drawn into the empty one, so a pack that only redraws the checkbox gets a matching ✗ for free. The ✓ is the game's own and is replaced like any of the game's pictures.
