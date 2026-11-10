@@ -29,6 +29,6 @@ A container's star describes its own status, not an aggregate of its contents. T
 
 ## Configuration and compatibility
 
-All marker colors, type priority, rounding, thickness, fill, star pixel scale and corner inset are configurable. See [Configuration](configuration.md).
+All marker colors, type priority, rounding, thickness, fill, star size and corner inset are configurable. See [Configuration](configuration.md).
 
 Disable the original Demand Highlight and overlapping marker mods. The fork uses a separate mod ID but shares the legacy query API contract, so enabling both providers is unsupported. See [Building](building.md) for the real-assembly build/scan checks and remaining gameplay validation.

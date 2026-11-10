@@ -20,11 +20,15 @@ Enable the mod and open its gear button in **main menu → Mods**. The game gene
 | `contrabandStarColor` | `#66ED80` | Contraband only |
 | `bothStarColor` | `#FF5656` | Both statuses on one item |
 | `starOutlineColor` | `#211C30` | Pixel-star edge |
-| `starPixelScale` | `2` | Integer scale, 1–4; complete mask is 11×11 pixels before scaling |
+| `starPixelScale` | `2` | Size levels 1–4: approximately 1/6, 1/3, 1/2 and 2/3 of one cell, rounded to UI pixels |
 | `starInset` | `2` | Inset from the view's top-right corner, 0–16 UI pixels |
 | `filterNumbers` | `true` | Item Filter statistics |
 
 Both **Toggle demand highlight** and **Open item filter** are unbound by default and belong in the game's key bindings. They are separate from the persisted marker-color entries. The old conditional `highlightClientGoods` option is replaced by the global permanent star layer.
+
+Star dimensions follow the game's single-cell size, independently of item/container dimensions. At the default 16 UI pixels per cell, level 2 is 5×5 UI pixels including the edge. Stars stay at the top right. The legacy `starPixelScale` key and saved values are retained; updating automatically makes existing configurations compact.
+
+The color-priority input has the same fixed width as other text settings. Long values scroll inside the field; format instructions are in its tooltip.
 
 ## Type colors
 

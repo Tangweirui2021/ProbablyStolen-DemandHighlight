@@ -49,7 +49,9 @@ opt_contraband_color,仅违禁品的星标颜色（默认绿）
 opt_both_color,赃物且违禁品的星标颜色（默认红）
 opt_star_edge,像素星描边颜色
 opt_stars,永久标记赃物与违禁品
-opt_star_scale,星标像素倍率
+opt_star_scale,星标大小（1–4）
 opt_star_inset,星标距右上角的内边距
-opt_type_priority,多类型物品的颜色优先级（英文ID以逗号分隔）
+opt_type_priority,多类型颜色优先级
 opt_hex_tip,填写 #RRGGBB 或 #RRGGBBAA。错误值沿用上次有效颜色；重启后错误值使用默认颜色。
+opt_star_size_tip,按一格的尺寸计算，默认等级 2 约为三分之一格。大容器和小物件使用相同大小；旧版设置自动采用缩小后的尺寸。
+opt_type_priority_tip,填写英文类型 ID，以逗号分隔，越靠前优先级越高。长文本可在固定宽度输入框内横向滚动。

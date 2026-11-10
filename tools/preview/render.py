@@ -18,7 +18,7 @@ if not Path(font).exists():
 def text(x,y,s,size=18,color='#DAD7E4',heavy=False):
     p.text((x,y),s,font=ImageFont.truetype(bold if heavy else font,size),fill=color)
 text(38,27,'需求框 × 永久星标',32,'#F3EAD9',True)
-text(39,78,'框线看物品类型，星标看物品属性；两套标记互相独立。',18,'#A9ACBD')
+text(39,78,'框色看类型，星标看属性；默认星标约三分之一格，始终位于右上角。',18,'#A9ACBD')
 p.line((38,115,962,115),fill='#3B3B50',width=1)
 xs=[38,276,514,752]
 def mask_layer(alpha,w,h,color,bottom_up=False):
@@ -30,12 +30,12 @@ def mask_layer(alpha,w,h,color,bottom_up=False):
 def card(x,y,title,kind,color=None,risk=None,container=False):
     # 100x64 logical UI units, at exactly 2x for a crisp, inspectable schematic.
     tile=Image.new('RGBA',(100,64),'#292A3A');q=ImageDraw.Draw(tile)
-    for xx in range(0,101,20):q.line((xx,0,xx,64),fill='#333446')
-    for yy in range(0,65,16):q.line((0,yy,100,yy),fill='#333446')
+    for xx in range(0,101,D['grid']):q.line((xx,0,xx,64),fill='#333446')
+    for yy in range(0,65,D['grid']):q.line((0,yy,100,yy),fill='#333446')
     if color:
         tile.alpha_composite(mask_layer(D['container'] if container else D['frame'],100,64,color,True))
     if risk:
-        side=D['side'];n=side*2
+        side=D['side'];n=D['starSize']
         for key,c in [('edge','#211C30'),('fill',risk)]:
             star=mask_layer(D[key],side,side,c).resize((n,n),Image.Resampling.NEAREST)
             tile.alpha_composite(star,(100-n-2,2))

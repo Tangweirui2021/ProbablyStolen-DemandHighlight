@@ -24,7 +24,9 @@ Legal status does not change the demand outline's color, pattern or fill intensi
 
 Stars run independently of the current customer, demand hotkey and shop inventory roots. Native item views created or validated on counters, customer goods, showcases, containers, machines and other scenes are registered. An ordinary container does not inherit its contents' risk star.
 
-Outline thickness, rounding, faint fill, the Item Filter, statistics and key bindings remain available. Type priority, every marker color, star pixel scale and corner inset are configurable. Pixel stars use point-filtered masks and ignore pointer input. Native drag previews have their own star: a whole-stack pickup hides the old position, while a partial-stack drag marks both visible portions.
+Outline thickness, rounding, faint fill, the Item Filter, statistics and key bindings remain available. Type priority, every marker color, star size and corner inset are configurable. Pixel stars use point-filtered masks and ignore pointer input. Native drag previews have their own star: a whole-stack pickup hides the old position, while a partial-stack drag marks both visible portions.
+
+Stars default to about one third of a single grid cell. Large containers and one-cell items use the same size; existing saved size levels become compact automatically after updating.
 
 ## Settings
 

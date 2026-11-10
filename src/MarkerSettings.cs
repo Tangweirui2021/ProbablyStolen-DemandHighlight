@@ -42,13 +42,15 @@ namespace DemandHighlight
             var enabled = config.Define("riskStars", true, "Risk stars / 属性星标", () => L("opt_stars"));
             StarsEnabled = enabled.Value;
             enabled.OnChanged += v => { StarsEnabled = v; Touch(); };
-            var scale = config.Define("starPixelScale", 2, "Risk stars / 属性星标", () => L("opt_star_scale"), 1, 4);
+            var scale = config.Define("starPixelScale", 2, "Risk stars / 属性星标", () => L("opt_star_scale"), 1, 4,
+                tooltip: () => L("opt_star_size_tip"));
             StarScale = scale.Value;
             scale.OnChanged += v => { StarScale = v; Touch(); };
             var inset = config.Define("starInset", 2, "Risk stars / 属性星标", () => L("opt_star_inset"), 0, 16);
             StarInset = inset.Value;
             inset.OnChanged += v => { StarInset = v; Touch(); };
-            var order = config.Define("typePriority", DefaultPriority, "Outline colors / 框线颜色", () => L("opt_type_priority"));
+            var order = config.Define("typePriority", DefaultPriority, "Outline colors / 框线颜色", () => L("opt_type_priority"),
+                tooltip: () => L("opt_type_priority_tip"));
             ReadPriority(order.Value);
             order.OnChanged += v => { ReadPriority(v); Touch(); };
             foreach (var type in Panel.KnownTypes()) EnsureType(type);

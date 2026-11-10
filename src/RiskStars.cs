@@ -135,7 +135,9 @@ namespace DemandHighlight
             badge.Rect.SetAsLastSibling();
             badge.Rect.localRotation = Quaternion.identity;
             badge.Rect.localScale = Vector3.one;
-            float side = Presentation.StarSide * Mathf.Clamp(MarkerSettings.StarScale, 1, 4);
+            var ui = UISettings.current;
+            float side = Presentation.StarSize(ui != null ? ui.gridSize : 16, MarkerSettings.StarScale);
+            side = Math.Min(side, Math.Min(anchor.rect.width, anchor.rect.height));
             badge.Rect.sizeDelta = new Vector2(side, side);
             badge.Rect.anchoredPosition = new Vector2(-MarkerSettings.StarInset, -MarkerSettings.StarInset);
             var fill = MarkerSettings.Star(risk); fill.a *= opacity;

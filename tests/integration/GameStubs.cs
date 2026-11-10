@@ -153,7 +153,12 @@ namespace UnityEngine.UI
         public UnityEngine.Canvas canvas;
         public float pixelsPerUnitMultiplier;
     }
-    public class LayoutElement : UnityEngine.Component { public bool ignoreLayout; }
+    public class LayoutElement : UnityEngine.Component
+    {
+        public bool ignoreLayout;
+        public int layoutPriority = 1;
+        public float minWidth, preferredWidth, flexibleWidth;
+    }
 }
 namespace UnityEngine.SceneManagement
 {
@@ -174,17 +179,24 @@ namespace HarmonyLib
         public Harmony(string id) { }
         public void Patch(MethodBase target, HarmonyMethod prefix = null, HarmonyMethod postfix = null) { Patches[target] = postfix.Method; }
         public void UnpatchAll(string id) { Patches.Clear(); }
-        public static void Notify(MethodBase target, object instance)
+        public static void Notify(MethodBase target, object instance, params object[] originalArgs)
         {
             MethodInfo m; if (!Patches.TryGetValue(target, out m)) return;
             var args = new object[m.GetParameters().Length];
-            for (int i = 0; i < args.Length; i++) if (m.GetParameters()[i].Name == "__instance") args[i] = instance;
+            for (int i = 0; i < args.Length; i++)
+            {
+                string name = m.GetParameters()[i].Name;
+                int index;
+                if (name == "__instance") args[i] = instance;
+                else if (name.StartsWith("__") && int.TryParse(name.Substring(2), out index)) args[i] = originalArgs[index];
+            }
             m.Invoke(null, args);
         }
     }
 }
 
-public class ConfigEntry<T>
+public class ConfigEntry { public string Key; }
+public class ConfigEntry<T> : ConfigEntry
 {
     public T Value;
     public event Action<T> OnChanged;
@@ -192,13 +204,44 @@ public class ConfigEntry<T>
 }
 public class ModConfig
 {
+    public string ModId = DemandHighlight.DemandMod.ModId;
     public readonly Dictionary<string, object> Entries = new Dictionary<string, object>();
     public ConfigEntry<T> Define<T>(string key, T initial, string section, Func<string> label, Func<string> tooltip = null, bool restart = false)
     {
-        var entry = new ConfigEntry<T> { Value = initial }; Entries[key] = entry; return entry;
+        var entry = new ConfigEntry<T> { Key = key, Value = initial }; Entries[key] = entry; return entry;
     }
     public ConfigEntry<int> Define(string key, int initial, string section, Func<string> label, int min, int max,
         Func<string> tooltip = null, bool restart = false) { return Define<int>(key, initial, section, label, tooltip, restart); }
+}
+public class CustomUIElement
+{
+    public UnityEngine.GameObject root;
+    public CustomUIElement SetFixedWidth(float width)
+    {
+        var layout = root.GetComponent<UnityEngine.UI.LayoutElement>() ?? root.AddComponent<UnityEngine.UI.LayoutElement>();
+        layout.minWidth = layout.preferredWidth = width; layout.flexibleWidth = 0;
+        return this;
+    }
+}
+public class CustomUIBuilder { public CustomUIElement Last; }
+public static class ModConfigWindow
+{
+    // Mirrors the native BuildEntry's fixed width and the priority-1 conflict in the supplied game/TMP IL.
+    static void BuildEntry(CustomUIBuilder builder, ModConfig config, ConfigEntry entry)
+    {
+        builder.Last = new CustomUIElement { root = new UnityEngine.GameObject("input_" + entry.Key) };
+        builder.Last.SetFixedWidth(245);
+        HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), null, builder, config, entry);
+    }
+    public static CustomUIElement BuildTestEntry(ModConfig config, ConfigEntry entry)
+    {
+        var builder = new CustomUIBuilder(); BuildEntry(builder, config, entry); return builder.Last;
+    }
+}
+public class UISettings : UnityEngine.MonoBehaviour
+{
+    public static UISettings current = new UISettings();
+    public int gridSize = 16;
 }
 public static class ModHelper
 {

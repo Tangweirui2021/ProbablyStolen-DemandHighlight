@@ -47,7 +47,13 @@ static class PresentationTest
         Check("bad hex rejected", !MarkerColor.TryParse("#GG0000", out color));
         Check("short hex rejected", !MarkerColor.TryParse("#FF0", out color));
         Check("null hex rejected", !MarkerColor.TryParse(null, out color));
+        Check("default star occupies about a third of one cell", Presentation.StarSize(16, 2) == 5);
+        Check("size levels stay compact", Presentation.StarSize(16, 1) == 3 && Presentation.StarSize(16, 3) == 8 && Presentation.StarSize(16, 4) == 11);
+        Check("size adapts to a different game grid", Presentation.StarSize(24, 2) == 8 && Presentation.StarSize(32, 2) == 11);
+        Check("missing grid uses native 16px default", Presentation.StarSize(0, 2) == 5);
+        Check("invalid size levels clamp safely", Presentation.StarSize(16, -1) == 3 && Presentation.StarSize(16, 99) == 11);
         var fill = Presentation.StarMask(false);
+        Check("compact point sampling retains both horizontal star tips", fill[3 * Presentation.StarSide + 1] == 255 && fill[3 * Presentation.StarSide + 9] == 255);
         var edge = Presentation.StarMask(true);
         int n = Presentation.StarSide, filled = 0, outlined = 0;
         bool symmetric = true, disjoint = true, padding = true;

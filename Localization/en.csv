@@ -49,7 +49,9 @@ opt_contraband_color,Contraband-only star color (green)
 opt_both_color,Stolen + contraband star color (red)
 opt_star_edge,Pixel star outline color
 opt_stars,Always mark stolen goods and contraband
-opt_star_scale,Star pixel scale
+opt_star_scale,Star size (1–4)
 opt_star_inset,Star corner inset
-opt_type_priority,Item type priority (comma-separated IDs)
+opt_type_priority,Item type color priority
 opt_hex_tip,Use #RRGGBB or #RRGGBBAA. An invalid value uses the last valid color (the default after restarting).
+opt_star_size_tip,Size is relative to one grid cell. Default level 2 is about one third of a cell. Large and small items use the same size; existing settings also become compact.
+opt_type_priority_tip,Enter comma-separated type IDs with highest priority first. Long text scrolls inside the fixed-width field.

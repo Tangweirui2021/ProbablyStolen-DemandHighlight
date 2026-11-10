@@ -149,6 +149,9 @@ namespace DemandHighlight
                     else if (m.Name == "Hide") { h.Patch(m, null, window); hides++; }
                 }
                 if (shows == 0 || hides == 0) throw new MissingMethodException("PixelWindow.Show/Hide not found");
+                Patch(h, typeof(ModConfigWindow).GetMethod("BuildEntry", AnyStatic, null,
+                    new[] { typeof(CustomUIBuilder), typeof(ModConfig), typeof(ConfigEntry) }, null),
+                    "ModConfigWindow.BuildEntry", Hook("SettingsEntryBuilt"));
             }
             if (ticker == null)
             {
@@ -225,6 +228,17 @@ namespace DemandHighlight
         static void ElementCreated(GameItemElement __instance) { RiskStars.Track(__instance); }
         static void ElementDestroyed(GameItemElement __instance) { RiskStars.Remove(__instance); dirty = true; }
         static void ElementChanged(GameItemElement __instance) { RiskStars.Track(__instance); dirty = true; }
+
+        // Only our long priority field: TMP_InputField reports the entire value's preferred width at priority 1,
+        // tying the native fixed-width LayoutElement. Unity then takes the larger width and crushes the label.
+        static void SettingsEntryBuilt(CustomUIBuilder __0, ModConfig __1, ConfigEntry __2)
+        {
+            if (__1 == null || __1.ModId != modId || __2 == null || __2.Key != "typePriority") return;
+            var widget = __0.Last;
+            if (widget == null || widget.root == null) return;
+            widget.SetFixedWidth(245f);
+            widget.root.GetComponent<UnityEngine.UI.LayoutElement>().layoutPriority = 2;
+        }
 
         // An item changed: what is kept about it, and the insides of the containers above it, are stale.
         static void ItemChanged(GameItem __instance)

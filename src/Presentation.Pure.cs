@@ -73,11 +73,21 @@ namespace DemandHighlight
             return best;
         }
 
+        // Level 2 stays close to one third of a single cell, independently of the item's footprint.
+        // Keep the saved 1..4 setting from wrt.2, but shrink its interpretation for existing installations too.
+        public static int StarSize(int gridSize, int level)
+        {
+            if (gridSize <= 0) gridSize = 16;
+            level = Math.Max(1, Math.Min(4, level));
+            return Math.Max(1, (int)Math.Round(gridSize * level / 6.0, MidpointRounding.AwayFromZero));
+        }
+
         // White alpha masks, including one pixel of transparent padding for a configurable dark outline.
         // A tiny five-point star, not a font glyph (which may be absent in some game languages).
         public const int StarSide = 11;
         static readonly string[] StarRows = {
-            "....#....", "...###...", "...###...", "#########", ".#######.",
+            // Two rows of horizontal arms keep the five-point silhouette when point-sampled to 5 UI pixels.
+            "....#....", "...###...", "#########", "#########", ".#######.",
             "..#####..", "..#####..", ".###.###.", ".##...##."
         };
 

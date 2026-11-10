@@ -53,6 +53,10 @@ static class Program
             if (methods.Length == 0) throw new MissingMethodException("PixelWindow", name);
             targets += methods.Length;
         }
+        var buildEntry = typeof(ModConfigWindow).GetMethod("BuildEntry", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
+            null, new[] { typeof(CustomUIBuilder), typeof(ModConfig), typeof(ConfigEntry) }, null);
+        if (buildEntry == null) throw new MissingMethodException("ModConfigWindow", "BuildEntry");
+        targets++; Console.WriteLine("TARGET " + buildEntry);
         Console.WriteLine("API targets verified: " + targets);
         var dlls = System.IO.Directory.GetFiles(modFolder, "*.dll");
         if (dlls.Length != 1 || Path.GetFileName(dlls[0]) != "TypeDemandStars.dll")

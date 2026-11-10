@@ -55,6 +55,15 @@ static class IntegrationTest
         mod.OnEnable();
         Check("constructor hooks installed", HarmonyLib.Harmony.Patches.ContainsKey(typeof(GameItemElement).GetConstructor(Type.EmptyTypes)));
         Check("no startup warnings", Debug.Warnings.Count == 0);
+        var priorityEntry = Entry<string>("typePriority");
+        var priorityField = ModConfigWindow.BuildTestEntry(ModHelper.Config, priorityEntry).root.GetComponent<LayoutElement>();
+        // TMP's content preference is thousands of pixels long. It must lose to the fixed-width entry.
+        float tmpPreference = MarkerSettings.DefaultPriority.Length * 8f;
+        float effectiveWidth = priorityField.layoutPriority > 1 ? priorityField.preferredWidth : Math.Max(tmpPreference, priorityField.preferredWidth);
+        Check("long priority input cannot squeeze its label", effectiveWidth == 245 && priorityField.minWidth == 245 && priorityField.flexibleWidth == 0);
+        Check("opening priority settings preserves the complete value", priorityEntry.Value == MarkerSettings.DefaultPriority);
+        Check("other settings keep native layout", ModConfigWindow.BuildTestEntry(ModHelper.Config, Entry<string>("stolenStarColor")).root.GetComponent<LayoutElement>().layoutPriority == 1);
+        Check("other mods keep native layout even with the same key", ModConfigWindow.BuildTestEntry(new ModConfig { ModId = "other_mod" }, priorityEntry).root.GetComponent<LayoutElement>().layoutPriority == 1);
 
         // None of these views is in a shop inventory. Even the shop singleton is absent.
         var locations = new[] { "warehouse", "front counter", "customer sale", "showcase", "container", "machine", "night scene", "other item UI" };
@@ -65,6 +74,16 @@ static class IntegrationTest
         for (int i = 0; i < locations.Length; i++)
             Check("global star with no shop/client: " + locations[i], Star(items[i]) != null && Star(items[i]).color == MarkerSettings.StolenColor);
         var target = items[0];
+        var starRect = (RectTransform)Child(target, "WRT.RiskStar").transform;
+        Check("existing default size level now fits one third of a 16px cell", starRect.sizeDelta.x == 5 && starRect.sizeDelta.y == 5);
+        Check("compact star keeps the top-right corner and configured inset", starRect.anchorMin.x == 1 && starRect.anchorMin.y == 1 && starRect.pivot.x == 1 && starRect.pivot.y == 1 && starRect.anchoredPosition.x == -2 && starRect.anchoredPosition.y == -2);
+        target.rectTransform.rect = new Rect(0,0,16,16); Step();
+        Check("smallest one-cell item keeps the compact star", starRect.sizeDelta.x == 5);
+        target.rectTransform.rect = new Rect(0,0,160,96); Step();
+        Check("large container does not enlarge the star", starRect.sizeDelta.x == 5);
+        UISettings.current.gridSize = 24; Step();
+        Check("star follows the game's grid size instead of item dimensions", starRect.sizeDelta.x == 8);
+        UISettings.current.gridSize = 16; Step();
         Check("badges do not intercept clicks", Star(target) != null && !Star(target).raycastTarget &&
             !Child(target, "WRT.RiskStar").transform.GetChild(0).gameObject.GetComponent<Image>().raycastTarget);
         Check("badges do not affect layout", Child(target, "WRT.RiskStar").GetComponent<LayoutElement>().ignoreLayout);
@@ -76,6 +95,7 @@ static class IntegrationTest
         dragged.ToggleFakeBackground(true, new Vector4(1f,1f,1f,0.5f)); Step();
         Check("whole-stack pickup hides the star at the old inventory position", Star(dragged) == null);
         Check("drag preview retains its own top-right star", DragStar(dragged) != null);
+        Check("drag preview uses the same compact dimensions", ((RectTransform)DragStar(dragged).transform.parent).sizeDelta.x == 5);
         Check("drag-preview star follows native opacity", DragStar(dragged).color.a == 0.5f);
         Check("drag-preview star does not intercept pointer input", !DragStar(dragged).raycastTarget);
         dragged.Contraband = true; dragged.Validate(); Step();
@@ -111,7 +131,7 @@ static class IntegrationTest
         Entry<string>("bothStarColor").Set("#12345680"); Step();
         Check("live-config star colour and opacity", Star(target).color == new Color(18 / 255f, 52 / 255f, 86 / 255f, 128 / 255f));
         Entry<int>("starPixelScale").Set(3); Step();
-        Check("live-config integer pixel scale", ((RectTransform)Child(target, "WRT.RiskStar").transform).sizeDelta.x == 33);
+        Check("live-config size level is relative to one cell", ((RectTransform)Child(target, "WRT.RiskStar").transform).sizeDelta.x == 8);
         Entry<bool>("riskStars").Set(false); Step();
         Check("dedicated stars setting hides badges", Star(target) == null);
         Entry<bool>("riskStars").Set(true); Step();
@@ -163,7 +183,7 @@ static class IntegrationTest
         Check("no unexpected runtime warnings", Debug.Warnings.Count == 0);
         if (args.Length == 2 && args[0] == "--preview-data")
         {
-            var data = new { side = Presentation.StarSide, fill = Array.ConvertAll(Presentation.StarMask(false), x => (int)x),
+            var data = new { side = Presentation.StarSide, grid = 16, starSize = Presentation.StarSize(16, 2), fill = Array.ConvertAll(Presentation.StarMask(false), x => (int)x),
                 edge = Array.ConvertAll(Presentation.StarMask(true), x => (int)x),
                 frame = Array.ConvertAll(Outline.Alpha(Shape.Full, 100, 64, new Style(Mark.Normal, false), 2, 3, true, 0), x => (int)x),
                 container = Array.ConvertAll(Outline.Alpha(Shape.Full, 100, 64, new Style(Mark.Normal, true), 2, 3, true, 0), x => (int)x) };

@@ -1,5 +1,12 @@
 # WRT fork changelog
 
+## 1.0.0-wrt.3
+
+- Fixed oversized stars: default dimensions are about one third of a single grid cell, for both small items and containers. Normal and drag views share the same sizing.
+- Kept existing size keys/levels so saved configurations automatically adopt compact dimensions after updating.
+- Fixed the long color-priority input stretching its settings row by overriding TMP input layout preference for this field only.
+- Shortened the priority label and moved comma-separated ID instructions into a tooltip.
+
 ## 1.0.0-wrt.2
 
 - Built against the supplied real game assemblies (internal label VERSION 100-Rev13), with zero warnings/errors.
