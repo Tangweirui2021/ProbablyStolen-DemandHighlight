@@ -2,11 +2,11 @@
 
 《深空当铺：可能是偷的》（Probably Stolen）的需求高亮与永久属性星标 Mod。
 
-[English](README.en.md) · [中文手册](doc/zh-CN/index.md) · [配置](doc/zh-CN/configuration.md) · [构建与安装](doc/zh-CN/building.md)
+[English](README.en.md) · [中文手册](doc/zh-CN/index.md) · [配置](doc/zh-CN/configuration.md) · [构建与安装](doc/zh-CN/building.md) · [测试包安装说明](doc/installation.md)
 
 基于 [KCN-judu 的 Demand Highlight](https://github.com/KCN-judu/ProbablyStolen-DemandHighlight) 修改，使用独立 Mod ID `wrt_type_demand_stars`。本仓库由 [Tangweirui2021](https://github.com/Tangweirui2021/ProbablyStolen-DemandHighlight) 维护；原作者署名与 Apache-2.0 许可证见 [NOTICE](NOTICE) 和 [LICENSE](LICENSE)。
 
-> 当前提供源码。纯逻辑与替身集成测试已通过；仍需使用你的当前游戏程序集进行真实编译和游戏内验证。仓库不含游戏文件或可直接安装的发行 DLL。`manifest.xml` 中的 `0.46D` 沿用上游声明，不代表已经验证当前正式版兼容。
+> 已使用提供的真实游戏程序集（内部标记 `VERSION 100-Rev13`）完成零警告编译、补丁目标检查及游戏自带 Mod 扫描。可安装测试包单独提供；本仓库不包含游戏文件。游戏内视觉效果仍待实机确认，见 [验证记录](VALIDATION.md)。`manifest.xml` 暂保留上游的 Unity 应用版本声明 `0.46D`；它与 DLL 内部修订号是不同字段。
 
 ![从实际代码掩码渲染的效果示意，非游戏截图](preview.png)
 
@@ -24,7 +24,7 @@
 - 星标独立于顾客与需求框开关：柜台、顾客出售的商品、展示柜、容器、机器及其他场景中被原生物品视图创建或刷新的物品，均进入独立判断。
 - 星标只表达物品本体属性。普通容器不会继承内容物的星标；内容物的需求由四角提示表达。容器本体如果就是顾客需要的商品，会按自身类型画完整框。
 - 保留框线粗细、圆角、淡底色、物品筛选和统计。新增多类型物品的颜色优先级、星标像素倍率和角落内边距设置。
-- 星体采用像素掩码与点采样，不依赖字体，也不拦截鼠标点击。
+- 星体采用像素掩码与点采样，不依赖字体，也不拦截鼠标点击。拖拽副本有独立星标；整堆拿起时隐藏旧位置星标，拆分拖动时两份可见物品都会显示。
 
 ## 配置
 
@@ -61,7 +61,7 @@ Windows PowerShell：
 python3 tools/check_docs.py
 ```
 
-测试需要 .NET SDK 8，覆盖 12 组纯逻辑测试及替身集成测试。最近的结果和未验证项见 [VALIDATION.md](VALIDATION.md)。替身测试不能代替当前游戏程序集编译、真实 Harmony 补丁或游戏内布局验证。
+测试需要 .NET SDK 8，覆盖 12 组纯逻辑测试及替身集成测试。真实程序集编译和扫描已另外完成；可用 `tools/check-game.sh /path/to/Managed` 复查 API 和扫描结果。实际 Harmony 执行及游戏内布局仍需实机验证，见 [VALIDATION.md](VALIDATION.md)。
 
 星标覆盖范围以原生 `GameItemElement` 视图的创建／刷新事件为基础。完全绕过该视图的附属 Mod 自建界面需另行适配。旋转、翻转、异形物品和窗口裁切仍需实机确认。
 

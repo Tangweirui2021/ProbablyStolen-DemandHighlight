@@ -18,7 +18,7 @@ The presentation layer normalizes matches to a solid full frame or contents-only
 
 The registry uses weak item/UI references, an urgent event queue and a round-robin safety refresh. Each tick targets approximately 1.5 ms, with bounded queue/background work; a normal view is eligible for another status check after 0.25 seconds. Large queues can delay work. Two shared point-filtered masks draw the star body and edge; colors and size do not allocate a separate sprite for every item.
 
-The game helpers are read for stolen and contraband independently, preserving the combined red-star state. A container does not aggregate its contents' risk.
+The game helpers are read for stolen and contraband independently, preserving the combined red-star state. A container does not aggregate its contents' risk. Each item has separate normal and drag-preview badge slots. They follow the native background-image visibility/opacity, including when the outer GameObject remains active during dragging. A destruction hook removes both slots.
 
 ## Cleanup
 

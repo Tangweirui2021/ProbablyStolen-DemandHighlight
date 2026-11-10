@@ -1,5 +1,13 @@
 # WRT fork changelog
 
+## 1.0.0-wrt.2
+
+- Built against the supplied real game assemblies (internal label VERSION 100-Rev13), with zero warnings/errors.
+- Fixed SDK reference selection so Unity framework facades cannot override the SDK reference assemblies.
+- Added independent drag-preview stars, native image visibility/opacity handling and explicit destruction cleanup.
+- Added real-assembly API-target checks and a harness for the game's own ModScanner; no extra capabilities or hard flags detected.
+- Installable test package prepared separately; actual gameplay/visual validation is still pending.
+
 ## 1.0.0-wrt.1
 
 - Demand outlines use item type palettes, independent of legal status.

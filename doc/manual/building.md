@@ -8,7 +8,7 @@
 - A copy of the current game and its `Probably Stolen_Data/Managed` folder.
 - Linux/macOS shell, Git Bash, or PowerShell for the wrapper scripts.
 
-No game files or installable release DLL are distributed in this source repository. The upstream `0.46D` manifest declaration is retained until real-version validation is available. A stand-in test build is not a release DLL.
+The installable test package is supplied separately from this source repository. A real-assembly build and the game's own scanner passed using references with internal label `VERSION 100-Rev13`. No game files are redistributed. The upstream `0.46D` Unity application-version declaration is temporarily retained; that field cannot be inferred solely from the game DLL's internal revision label. Gameplay validation remains pending.
 
 ## Main mod
 
@@ -61,3 +61,13 @@ GAME='/path/to/Probably Stolen' ./tools/QuerySample/build.sh --install
 ```
 
 It uses the same .NET SDK and game-assembly requirements. Enable the fork and the Query Sample to exercise the API; see [Query API](query-api.md).
+
+## Real-assembly API/scanner check
+
+After building the mod, run:
+
+```bash
+./tools/check-game.sh '/path/to/Managed'
+```
+
+This checks the exact Harmony target signatures and runs the supplied game build's `ModScanner.Scan` outside the game. It reads game assemblies but does not copy them into the mod or run the game's Unity engine. It does not exercise actual Harmony patch execution or render the UI. The checked build reported no extra capabilities or hard flags.

@@ -6,7 +6,7 @@ Customer-demand outlines and permanent risk stars for *Probably Stolen*.
 
 This is [Tangweirui2021's fork](https://github.com/Tangweirui2021/ProbablyStolen-DemandHighlight) of [Demand Highlight by KCN-judu](https://github.com/KCN-judu/ProbablyStolen-DemandHighlight), with a separate mod ID, `wrt_type_demand_stars`. Attribution and the Apache-2.0 license are in [NOTICE](NOTICE) and [LICENSE](LICENSE).
 
-> Source is available; a real-game build and gameplay validation against the player's current assemblies are still pending. No game files or installable release DLL are included. The manifest retains the upstream `0.46D` declaration; it does not establish compatibility with the current full release.
+> Built with zero warnings against the supplied real game assemblies (internal label `VERSION 100-Rev13`). Patch-target checks and the game's own ModScanner passed. The installable test package is supplied separately; no game files are included in this repository. Gameplay/visual validation remains pending; see [VALIDATION.md](VALIDATION.md). The manifest temporarily retains upstream's Unity application-version declaration `0.46D`, a different field from the DLL's internal revision label.
 
 ![Schematic rendered from the code's actual masks, not a game screenshot](preview.png)
 
@@ -24,7 +24,7 @@ Legal status does not change the demand outline's color, pattern or fill intensi
 
 Stars run independently of the current customer, demand hotkey and shop inventory roots. Native item views created or validated on counters, customer goods, showcases, containers, machines and other scenes are registered. An ordinary container does not inherit its contents' risk star.
 
-Outline thickness, rounding, faint fill, the Item Filter, statistics and key bindings remain available. Type priority, every marker color, star pixel scale and corner inset are configurable. Pixel stars use point-filtered masks and ignore pointer input.
+Outline thickness, rounding, faint fill, the Item Filter, statistics and key bindings remain available. Type priority, every marker color, star pixel scale and corner inset are configurable. Pixel stars use point-filtered masks and ignore pointer input. Native drag previews have their own star: a whole-stack pickup hides the old position, while a partial-stack drag marks both visible portions.
 
 ## Settings
 
@@ -57,7 +57,7 @@ Output: `out/wrt_type_demand_stars/`. Copy that whole folder into the game's `Mo
 python3 tools/check_docs.py
 ```
 
-Twelve pure-data suites and a stand-in integration suite exercise the fork. See [VALIDATION.md](VALIDATION.md) for results and unverified items. These tests do not replace a build against real game assemblies or real Harmony/Unity validation.
+Twelve pure-data suites and a stand-in integration suite exercise the fork. The real-assembly build and scanner checks were also completed separately; `tools/check-game.sh /path/to/Managed` repeats the API/scan checks. Actual Harmony execution and in-game Unity layout still require gameplay testing. See [VALIDATION.md](VALIDATION.md).
 
 Entirely custom item interfaces that bypass native `GameItemElement` views need an adapter. Rotation, mirroring, irregular shapes and clipping still need real-game verification.
 

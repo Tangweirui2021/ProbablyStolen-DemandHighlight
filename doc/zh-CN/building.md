@@ -6,7 +6,7 @@
 
 需要 .NET SDK 8 或更新版本，以及当前游戏的 `Probably Stolen_Data/Managed` 文件夹。游戏 Mod 编译目标是 `netstandard2.1`，测试运行目标是 .NET 8。
 
-本仓库不分发游戏文件或可直接安装的发行 DLL。`manifest.xml` 保留上游的 `0.46D` 声明，尚未完成当前正式版验证。测试替身编译出来的程序不能当作 Mod 安装。
+可安装测试包单独提供。使用内部标记为 `VERSION 100-Rev13` 的真实程序集已完成编译与游戏自带扫描，本仓库不分发游戏文件。`manifest.xml` 暂保留上游 Unity 应用版本字段 `0.46D`，无法仅从 DLL 内部修订号推断该字段。实际游玩验证仍待完成。
 
 ## 主模组
 
@@ -59,3 +59,13 @@ GAME='/path/to/Probably Stolen' ./tools/QuerySample/build.sh --install
 ```
 
 它也使用 .NET SDK 和当前游戏程序集。启用本 Fork 和 Query Sample 后可测试接口，见[查询 API](query-api.md)。
+
+## 真实程序集 API 与扫描检查
+
+编译主 Mod 后执行：
+
+```bash
+./tools/check-game.sh '/path/to/Managed'
+```
+
+会核对 Harmony 目标签名，并在游戏外调用所提供版本自带的 `ModScanner.Scan`。检查工具读取游戏程序集，但不会将其复制进 Mod，也不启动 Unity 游戏引擎。它不等于真实执行 Harmony 或渲染界面；本次扫描未检测到额外权限或硬性拒绝标记。

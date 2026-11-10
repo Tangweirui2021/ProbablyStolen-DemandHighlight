@@ -6,26 +6,29 @@ using UnityEngine.UI;
 
 namespace DemandHighlight
 {
-    // ALL GameItemElement views, not the shop's inventories. Constructors/Validate register any item view:
-    // customer goods, counters, showcases, machines, open containers and other scenes use the same path.
-    // Weak registrations cannot keep a sold item, a closed window or an old scene alive.
+    // Global native item views, including both the inventory view and the game's separate drag/stack preview.
+    // Registration does not depend on shop roots or the current customer. All registry roots are weak.
     public static class RiskStars
     {
         sealed class Registration
         {
-            public WeakReference Item, Root = new WeakReference(null);
+            public WeakReference Item, Root = new WeakReference(null), DragRoot = new WeakReference(null);
         }
         sealed class Badge
         {
-            public Registration Registration;
             public GameObject Root;
             public RectTransform Rect, Anchor;
             public Image Fill, Edge;
+        }
+        sealed class Entry
+        {
+            public Registration Registration;
+            public readonly Badge Normal = new Badge(), Drag = new Badge();
             public float Next;
             public bool Queued;
         }
 
-        static ConditionalWeakTable<GameItemElement, Badge> badges = new ConditionalWeakTable<GameItemElement, Badge>();
+        static ConditionalWeakTable<GameItemElement, Entry> entries = new ConditionalWeakTable<GameItemElement, Entry>();
         static readonly List<Registration> views = new List<Registration>();
         static readonly Queue<WeakReference> urgent = new Queue<WeakReference>();
         static readonly System.Diagnostics.Stopwatch clock = new System.Diagnostics.Stopwatch();
@@ -35,34 +38,41 @@ namespace DemandHighlight
 
         public static void Track(GameItemElement item)
         {
-            if (item == null) return;
-            Badge badge;
-            if (!badges.TryGetValue(item, out badge))
+            if (item == null || item.IsDestroyed()) return;
+            Entry entry;
+            if (!entries.TryGetValue(item, out entry))
             {
-                badge = new Badge { Registration = new Registration { Item = new WeakReference(item) } };
-                badges.Add(item, badge);
-                views.Add(badge.Registration);
+                entry = new Entry { Registration = new Registration { Item = new WeakReference(item) } };
+                entries.Add(item, entry);
+                views.Add(entry.Registration);
             }
-            badge.Next = 0f;
-            if (!badge.Queued) { urgent.Enqueue(badge.Registration.Item); badge.Queued = true; }
+            entry.Next = 0f;
+            if (!entry.Queued) { urgent.Enqueue(entry.Registration.Item); entry.Queued = true; }
         }
 
         public static void Changed(GameItem item) { Track(item as GameItemElement); }
 
-        // Runs BEFORE the demand-toggle/no-customer early returns. It never asks Engine, Shop or GameIntent.
+        public static void Remove(GameItemElement item)
+        {
+            Entry entry;
+            if (item == null || !entries.TryGetValue(item, out entry)) return;
+            Release(entry.Registration);
+            entries.Remove(item);
+        }
+
+        // Always runs before the demand toggle, no-customer and no-shop early returns.
         public static void Tick()
         {
             float now = Time.unscaledTime;
             clock.Restart();
             int count = 0;
-            // Newly created/validated/moved items take priority over the periodic safety refresh.
             while (urgent.Count > 0 && count++ < 128)
             {
                 var item = urgent.Dequeue().Target as GameItemElement;
-                Badge badge;
-                if (item == null || !badges.TryGetValue(item, out badge)) continue;
-                badge.Queued = false;
-                RefreshSafe(item, badge, now);
+                Entry entry;
+                if (item == null || !entries.TryGetValue(item, out entry)) continue;
+                entry.Queued = false;
+                RefreshSafe(item, entry, now);
                 if (clock.Elapsed.TotalMilliseconds >= 1.5) break;
             }
             int remaining = Math.Min(256, views.Count);
@@ -71,62 +81,75 @@ namespace DemandHighlight
                 if (cursor >= views.Count) cursor = 0;
                 var registration = views[cursor];
                 var item = registration.Item.Target as GameItemElement;
-                Badge badge;
-                if (item == null || !badges.TryGetValue(item, out badge))
+                Entry entry;
+                if (item == null || !entries.TryGetValue(item, out entry) || item.IsDestroyed())
                 {
-                    // A pooled UI anchor can outlive its model. Remove an orphaned badge without retaining that UI.
-                    var root = registration.Root.Target as GameObject;
-                    if (root != null) UnityEngine.Object.Destroy(root);
+                    Release(registration);
+                    if (item != null) entries.Remove(item);
                     views.RemoveAt(cursor); continue;
                 }
                 cursor++;
-                if (now >= badge.Next) RefreshSafe(item, badge, now);
+                if (now >= entry.Next) RefreshSafe(item, entry, now);
             }
             clock.Stop();
         }
 
-        static void RefreshSafe(GameItemElement item, Badge badge, float now)
+        static void RefreshSafe(GameItemElement item, Entry entry, float now)
         {
-            badge.Next = now + 0.25f;
-            try { Refresh(item, badge); }
+            entry.Next = now + 0.25f;
+            try { Refresh(item, entry); }
             catch (Exception e)
             {
-                Hide(badge);
+                Hide(entry.Normal); Hide(entry.Drag);
                 if (!warned) { warned = true; Debug.LogWarning(DemandMod.Tag + "star refresh failed: " + e.Message); }
             }
         }
 
-        static void Refresh(GameItemElement item, Badge badge)
+        static void Refresh(GameItemElement item, Entry entry)
         {
-            var anchor = item.rectTransform;
-            if (!MarkerSettings.StarsEnabled || anchor == null || !anchor.gameObject.activeInHierarchy)
-            { Hide(badge); return; }
-            // The two helpers are deliberately read independently. A box is not marked for its contents' risks.
+            if (!MarkerSettings.StarsEnabled || item.IsDestroyed())
+            { Hide(entry.Normal); Hide(entry.Drag); return; }
             var risk = Presentation.RiskOf(StolenHelper.IsStolenItem(item), ContrabandHelper.IsContraband(item));
-            if (risk == Risk.None) { Hide(badge); return; }
-            var rect = anchor.rect;
-            if (rect.width < 1f || rect.height < 1f) { Hide(badge); return; }
-            Ensure(badge, anchor);
-            badge.Root.SetActive(true);
-            badge.Rect.SetAsLastSibling();
-            // Anchor to the outer item view, not its internal rotator: the star stays upright at the UI's top right.
-            badge.Rect.localRotation = Quaternion.identity;
-            badge.Rect.localScale = Vector3.one;
-            int pixelScale = Mathf.Clamp(MarkerSettings.StarScale, 1, 4);
-            float side = Presentation.StarSide * pixelScale;
-            badge.Rect.sizeDelta = new Vector2(side, side);
-            badge.Rect.anchoredPosition = new Vector2(-MarkerSettings.StarInset, -MarkerSettings.StarInset);
-            badge.Fill.color = MarkerSettings.Star(risk);
-            badge.Edge.color = MarkerSettings.StarOutlineColor;
+            if (risk == Risk.None) { Hide(entry.Normal); Hide(entry.Drag); return; }
+
+            // The game hides an exhausted original stack by disabling its image, while keeping its object active.
+            // A partial-stack drag can legitimately have both views visible. Follow each native view separately.
+            Render(entry.Normal, entry.Registration.Root, item.rectTransform, VisibleOpacity(item.background), risk);
+            var fake = item.fakeMiddle;
+            Render(entry.Drag, entry.Registration.DragRoot, fake != null ? fake.rectTransform : null,
+                VisibleOpacity(item.fakeBackground), risk);
         }
 
-        static void Ensure(Badge badge, RectTransform anchor)
+        static float VisibleOpacity(TreeNodeRender node)
+        {
+            if (node == null || node.image == null || !node.image.enabled) return 0f;
+            return Mathf.Clamp(node.image.color.a, 0f, 1f);
+        }
+
+        static void Render(Badge badge, WeakReference root, RectTransform anchor, float opacity, Risk risk)
+        {
+            if (anchor == null || !anchor.gameObject.activeInHierarchy || opacity <= 0f || anchor.rect.width < 1f || anchor.rect.height < 1f)
+            { Hide(badge); return; }
+            Ensure(badge, root, anchor);
+            badge.Root.SetActive(true);
+            badge.Rect.SetAsLastSibling();
+            badge.Rect.localRotation = Quaternion.identity;
+            badge.Rect.localScale = Vector3.one;
+            float side = Presentation.StarSide * Mathf.Clamp(MarkerSettings.StarScale, 1, 4);
+            badge.Rect.sizeDelta = new Vector2(side, side);
+            badge.Rect.anchoredPosition = new Vector2(-MarkerSettings.StarInset, -MarkerSettings.StarInset);
+            var fill = MarkerSettings.Star(risk); fill.a *= opacity;
+            var outline = MarkerSettings.StarOutlineColor; outline.a *= opacity;
+            badge.Fill.color = fill;
+            badge.Edge.color = outline;
+        }
+
+        static void Ensure(Badge badge, WeakReference root, RectTransform anchor)
         {
             if (badge.Root == null)
             {
                 var go = new GameObject("WRT.RiskStar", typeof(RectTransform));
-                badge.Root = go;
-                badge.Registration.Root.Target = go;
+                badge.Root = go; root.Target = go;
                 badge.Rect = (RectTransform)go.transform;
                 go.AddComponent<LayoutElement>().ignoreLayout = true;
                 badge.Edge = Image(go.transform, "Outline", Sprite(true));
@@ -163,7 +186,6 @@ namespace DemandHighlight
             int side = Presentation.StarSide;
             var mask = Presentation.StarMask(outline);
             var pixels = new Color32[mask.Length];
-            // Pure mask uses top-down rows; Unity textures use bottom-up rows.
             for (int y = 0; y < side; y++) for (int x = 0; x < side; x++)
                 pixels[(side - 1 - y) * side + x] = new Color32(255, 255, 255, mask[y * side + x]);
             var texture = new Texture2D(side, side, TextureFormat.RGBA32, false);
@@ -178,33 +200,43 @@ namespace DemandHighlight
         }
 
         static void Hide(Badge badge) { if (badge.Root != null) badge.Root.SetActive(false); }
+        static void Release(Registration registration)
+        {
+            var root = registration.Root.Target as GameObject;
+            if (root != null) UnityEngine.Object.Destroy(root);
+            root = registration.DragRoot.Target as GameObject;
+            if (root != null) UnityEngine.Object.Destroy(root);
+            registration.Root.Target = registration.DragRoot.Target = null;
+        }
 
         public static void BringToFront(GameItemElement item)
         {
-            Badge badge;
-            if (item != null && badges.TryGetValue(item, out badge) && badge.Root != null) badge.Rect.SetAsLastSibling();
+            Entry entry;
+            if (item == null || !entries.TryGetValue(item, out entry)) return;
+            if (entry.Normal.Root != null) entry.Normal.Rect.SetAsLastSibling();
+            if (entry.Drag.Root != null) entry.Drag.Rect.SetAsLastSibling();
         }
 
-        // Scene transitions may already have constructed the new scene's views. Keep their weak registrations.
+        // New scene views may already exist when sceneLoaded fires. Keep their weak registrations.
         public static void ReleaseViews()
         {
             foreach (var registration in views)
             {
-                var root = registration.Root.Target as GameObject;
-                if (root != null) UnityEngine.Object.Destroy(root);
-                registration.Root.Target = null;
+                Release(registration);
                 var item = registration.Item.Target as GameItemElement;
-                Badge badge;
-                if (item == null || !badges.TryGetValue(item, out badge)) continue;
-                badge.Root = null; badge.Anchor = badge.Rect = null;
-                badge.Fill = badge.Edge = null; badge.Next = 0f;
+                Entry entry;
+                if (item == null || !entries.TryGetValue(item, out entry)) continue;
+                entry.Normal.Root = entry.Drag.Root = null;
+                entry.Normal.Anchor = entry.Normal.Rect = entry.Drag.Anchor = entry.Drag.Rect = null;
+                entry.Normal.Fill = entry.Normal.Edge = entry.Drag.Fill = entry.Drag.Edge = null;
+                entry.Next = 0f;
             }
         }
 
         public static void DestroyAll()
         {
             ReleaseViews();
-            badges = new ConditionalWeakTable<GameItemElement, Badge>();
+            entries = new ConditionalWeakTable<GameItemElement, Entry>();
             views.Clear(); urgent.Clear(); cursor = 0;
             foreach (var s in new[] { star, edge })
                 if (s != null) { UnityEngine.Object.Destroy(s.texture); UnityEngine.Object.Destroy(s); }

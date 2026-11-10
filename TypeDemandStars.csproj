@@ -12,7 +12,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src/*.cs" />
-    <Reference Include="$(GameManagedDir)/*.dll"><Private>false</Private></Reference>
+    <Reference Include="$(GameManagedDir)/*.dll"
+               Exclude="$(GameManagedDir)/mscorlib.dll;$(GameManagedDir)/netstandard.dll;$(GameManagedDir)/System*.dll;$(GameManagedDir)/Microsoft*.dll;$(GameManagedDir)/Mono.*.dll">
+      <Private>false</Private>
+    </Reference>
     <Content Include="manifest.xml;preview.png;Localization/*.csv;LICENSE;NOTICE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

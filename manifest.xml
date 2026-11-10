@@ -3,7 +3,7 @@
   <ID>wrt_type_demand_stars</ID>
   <Name>Type Demand &amp; Risk Stars</Name>
   <Author>WRT fork; based on KCN-judu</Author>
-  <ModVersion>1.0.0-wrt.1</ModVersion>
+  <ModVersion>1.0.0-wrt.2</ModVersion>
   <Description>Demand outlines colored by item type, with one container-hint color. Independent permanent pixel stars on all item views: yellow stolen, green contraband, red both. Colors, thickness, rounding, fill and star size are configurable in the native Mods settings panel. Disable the original Demand Highlight when using this fork.</Description>
   <GameVersions>
     <Version>0.46D</Version>

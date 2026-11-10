@@ -122,9 +122,14 @@ namespace DemandHighlight
                 // Register every item view, regardless of location/scene/customer. A GameItemElement is a game
                 // model with a UI handle, not necessarily a Unity Component, so don't FindObjectsOfType it.
                 var created = Hook("ElementCreated");
+                var destroyed = Hook("ElementDestroyed");
                 var constructors = typeof(GameItemElement).GetConstructors(AnyInstance);
                 if (constructors.Length == 0) throw new MissingMethodException("GameItemElement constructors not found");
                 foreach (var constructor in constructors) h.Patch(constructor, null, created);
+                Patch(h, typeof(GameItemElement).GetMethod("Destroy", AnyInstance, null, Type.EmptyTypes, null), "GameItemElement.Destroy", destroyed);
+                // Native stack dragging toggles Image.enabled without disabling the item's outer GameObject.
+                foreach (var method in typeof(GameItemElement).GetMethods(AnyInstance))
+                    if (method.Name == "ToggleBackground" || method.Name == "ToggleFakeBackground") h.Patch(method, null, mark);
                 Patch(h, typeof(GameItemElement).GetMethod("Validate", AnyInstance, null, Type.EmptyTypes, null), "GameItemElement.Validate", changed);
                 Patch(h, typeof(GameItem).GetMethod("EnableTag", AnyInstance, null, new[] { typeof(string), typeof(bool) }, null), "GameItem.EnableTag", tagged);
                 Patch(h, typeof(GameItem).GetMethod("DisableTag", AnyInstance, null, new[] { typeof(string), typeof(bool) }, null), "GameItem.DisableTag", tagged);
@@ -218,6 +223,7 @@ namespace DemandHighlight
         }
 
         static void ElementCreated(GameItemElement __instance) { RiskStars.Track(__instance); }
+        static void ElementDestroyed(GameItemElement __instance) { RiskStars.Remove(__instance); dirty = true; }
         static void ElementChanged(GameItemElement __instance) { RiskStars.Track(__instance); dirty = true; }
 
         // An item changed: what is kept about it, and the insides of the containers above it, are stale.

@@ -7,3 +7,7 @@ This fork changes the demand-outline palette to item types and adds independent,
 permanent risk stars for every registered item view. Original copyright and
 license notices remain applicable. The game and its assets belong to their owners.
 No game binaries are distributed with this source.
+
+The GameCheck scanner harness is adapted from KCN-judu/ProbablyStolen-Mods,
+tools/modding/ScanTest.cs, also Apache License 2.0.
+Source: https://github.com/KCN-judu/ProbablyStolen-Mods

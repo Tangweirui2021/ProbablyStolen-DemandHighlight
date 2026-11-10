@@ -85,7 +85,7 @@ namespace UnityEngine
         public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
         public static Vector3 one { get { return new Vector3(1, 1, 1); } }
     }
-    public struct Vector4 { public Vector4(float x, float y, float z, float w) { } public static Vector4 zero { get { return new Vector4(); } } }
+    public struct Vector4 { public float x,y,z,w; public Vector4(float x, float y, float z, float w) { this.x=x; this.y=y; this.z=z; this.w=w; } public static Vector4 zero { get { return new Vector4(); } } }
     public struct Quaternion { public static Quaternion identity { get { return new Quaternion(); } } }
     public struct Rect { public float width, height; public Rect(float x, float y, float w, float h) { width = w; height = h; } }
     public struct Color
@@ -146,9 +146,10 @@ namespace UnityEngine.UI
     {
         public enum Type { Simple, Sliced, Tiled }
         public bool raycastTarget = true, fillCenter;
+        public bool enabled = true;
         public UnityEngine.Sprite sprite;
         public Type type;
-        public UnityEngine.Color color;
+        public UnityEngine.Color color = new UnityEngine.Color(1,1,1,1);
         public UnityEngine.Canvas canvas;
         public float pixelsPerUnitMultiplier;
     }
@@ -247,14 +248,45 @@ public class GameItemElement : GameItem
     public UnityEngine.RectTransform rectTransform;
     public GridShape shape, modifiedShape;
     public Rotator rotator;
+    public TreeNodeRender background, fakeBackground, fakeMiddle;
+    bool destroyed;
     public GameItemElement()
     {
         rectTransform = (UnityEngine.RectTransform)new UnityEngine.GameObject("Item").transform;
+        background = TreeNodeRender.Create("Background");
+        fakeMiddle = TreeNodeRender.Create("Drag view");
+        fakeBackground = TreeNodeRender.Create("Drag background");
+        fakeBackground.image.enabled = false;
         HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this);
     }
     public void Validate() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
     public void RotCW() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
     public void RotCCW() { HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public bool IsDestroyed() { return destroyed; }
+    public void Destroy() { destroyed = true; HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this); }
+    public void ToggleBackground(bool visible, float opacity, float brightness)
+    {
+        background.image.enabled = visible;
+        background.image.color = new UnityEngine.Color(brightness,brightness,brightness,opacity);
+        HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this);
+    }
+    public void ToggleFakeBackground(bool visible, UnityEngine.Vector4 color)
+    {
+        fakeBackground.image.enabled = visible;
+        fakeBackground.image.color = new UnityEngine.Color(color.x,color.y,color.z,color.w);
+        HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(), this);
+    }
+}
+public class TreeNodeRender : UnityEngine.Component
+{
+    public UnityEngine.RectTransform rectTransform { get { return (UnityEngine.RectTransform)transform; } }
+    public UnityEngine.UI.Image image { get { return gameObject.GetComponent<UnityEngine.UI.Image>(); } }
+    public static TreeNodeRender Create(string name)
+    {
+        var go = new UnityEngine.GameObject(name);
+        go.AddComponent<UnityEngine.UI.Image>();
+        return go.AddComponent<TreeNodeRender>();
+    }
 }
 public class Rotator { public UnityEngine.RectTransform rectTransform; }
 public class GridShape { public int width = 1, height = 1, orientation; public bool flipped; public int GetLocal(int x, int y) { return 1; } }

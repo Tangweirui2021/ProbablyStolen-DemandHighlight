@@ -4,4 +4,4 @@ Independent, always-on pixel stars on all native item views: yellow = stolen, gr
 Colors, star size, thickness, corner rounding and fill are configurable in the game's native Mods settings.
 Demand/filter hotkeys do not disable permanent risk stars.
 Based on KCN-judu's Demand Highlight (Apache-2.0). Disable the original and other overlapping highlight mods.
-Source version only: real-game build and validation against the player's current Managed assemblies are still required.
+Built and scanner-checked against supplied real game references labelled VERSION 100-Rev13. Gameplay validation remains pending. Native drag/stack-preview stars are included.

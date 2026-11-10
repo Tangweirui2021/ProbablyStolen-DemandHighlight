@@ -30,6 +30,13 @@ static class IntegrationTest
         var root = Child(item, "WRT.RiskStar");
         return root != null && root.activeInHierarchy ? root.transform.GetChild(1).gameObject.GetComponent<Image>() : null;
     }
+    static Image DragStar(GameItemElement item)
+    {
+        foreach (var child in item.fakeMiddle.rectTransform.children)
+            if (child.gameObject.name == "WRT.RiskStar" && child.gameObject.activeInHierarchy)
+                return child.GetChild(1).gameObject.GetComponent<Image>();
+        return null;
+    }
     static ConfigEntry<T> Entry<T>(string key) { return (ConfigEntry<T>)ModHelper.Config.Entries[key]; }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -61,6 +68,28 @@ static class IntegrationTest
         Check("badges do not intercept clicks", Star(target) != null && !Star(target).raycastTarget &&
             !Child(target, "WRT.RiskStar").transform.GetChild(0).gameObject.GetComponent<Image>().raycastTarget);
         Check("badges do not affect layout", Child(target, "WRT.RiskStar").GetComponent<LayoutElement>().ignoreLayout);
+
+        var dragged = new GameItemElement { Stolen = true };
+        Step();
+        Check("idle view has one star and no drag-preview star", Star(dragged) != null && DragStar(dragged) == null);
+        dragged.ToggleBackground(false, 1f, 1f);
+        dragged.ToggleFakeBackground(true, new Vector4(1f,1f,1f,0.5f)); Step();
+        Check("whole-stack pickup hides the star at the old inventory position", Star(dragged) == null);
+        Check("drag preview retains its own top-right star", DragStar(dragged) != null);
+        Check("drag-preview star follows native opacity", DragStar(dragged).color.a == 0.5f);
+        Check("drag-preview star does not intercept pointer input", !DragStar(dragged).raycastTarget);
+        dragged.Contraband = true; dragged.Validate(); Step();
+        Check("drag preview preserves the combined red-star state", DragStar(dragged).color.r == MarkerSettings.BothColor.r && DragStar(dragged).color.g == MarkerSettings.BothColor.g);
+        dragged.ToggleBackground(true,1f,1f); Step();
+        Check("partial-stack drag marks both visible portions", Star(dragged) != null && DragStar(dragged) != null);
+        Entry<bool>("riskStars").Set(false); Step();
+        Check("star setting hides both native views", Star(dragged) == null && DragStar(dragged) == null);
+        Entry<bool>("riskStars").Set(true); Step();
+        Check("star setting restores both visible views", Star(dragged) != null && DragStar(dragged) != null);
+        dragged.ToggleFakeBackground(false, Vector4.zero); Step();
+        Check("dropping the stack removes only the drag-preview star", Star(dragged) != null && DragStar(dragged) == null);
+        dragged.Destroy(); Step();
+        Check("destroyed items lose all star UI immediately", Star(dragged) == null && DragStar(dragged) == null);
 
         target.Contraband = true; target.Validate(); Step();
         Check("both statuses use red", Star(target).color == MarkerSettings.BothColor);

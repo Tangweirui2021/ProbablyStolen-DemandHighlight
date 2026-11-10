@@ -12,7 +12,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="QuerySample.cs;../../api/DemandHighlightQuery.cs" />
-    <Reference Include="$(GameManagedDir)/*.dll"><Private>false</Private></Reference>
+    <Reference Include="$(GameManagedDir)/*.dll"
+               Exclude="$(GameManagedDir)/mscorlib.dll;$(GameManagedDir)/netstandard.dll;$(GameManagedDir)/System*.dll;$(GameManagedDir)/Microsoft*.dll;$(GameManagedDir)/Mono.*.dll">
+      <Private>false</Private>
+    </Reference>
     <Content Include="manifest.xml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
   </ItemGroup>
   <Target Name="CheckGameAssemblies" BeforeTargets="ResolveReferences">
