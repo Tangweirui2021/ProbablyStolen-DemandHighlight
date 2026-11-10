@@ -80,7 +80,10 @@ namespace DemandHighlight
         {
             if (p.Filtering)
                 return self.Buyer != Mark.None ? new Style(self.Buyer, false) : new Style(inside.Buyer, true);
-            if (lockedAbove || f.BehindLock || f.Immovable) return default(Style);
+            if (lockedAbove || f.BehindLock) return default(Style);
+            // A fixed trashcan cannot be sold, but should point to recoverable goods inside it.
+            if (f.Immovable)
+                return p.Want != null && !f.Locked ? new Style(inside.Buyer, true) : default(Style);
             if (p.Search != null)
             {
                 if (blockedAbove) return default(Style);

@@ -29,3 +29,5 @@ Leaving the store releases demand-engine state and its outlines/filter window. S
 The fork's log prefix is `[TypeDemandStars]`. Demand refreshes above 8 ms are logged with walk/draw timings; this is a diagnostic threshold rather than a budget guarantee. Invalid color input produces a warning and keeps a valid fallback.
 
 Run `tests/run.sh` for the pure-data and stand-in integration checks. [VALIDATION.md](../../VALIDATION.md) separates passing checks from real-game tests that are still pending. See [Configuration](configuration.md) for the marker settings and [Query API](query-api.md) for whole-shop API walks, which have a different scope and scheduling model.
+
+The embedded filter dock checks its placement against inventory/trash bounds each frame. Type/language discovery runs at most twice a second; controls rebuild only after layout, type-list or language changes. Selection synchronization follows the shared filter version. It does not add a second inventory scan.

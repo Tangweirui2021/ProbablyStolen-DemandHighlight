@@ -165,6 +165,8 @@ namespace DemandHighlight
             complete &= Root(shop.bazarLeftinvElement);
             complete &= Root(shop.hiddenElement);
             complete &= Root(shop.soldElement);
+            // This slot owns the fixed trashcan and its contents; it is outside every ordinary shop root.
+            complete &= Root(shop.trashInvElement);
             clock.Stop();
 
             // Each storage tab takes the strongest mark of the items on its page.
@@ -435,7 +437,7 @@ namespace DemandHighlight
             return LockHelper.IsLockedContainer(item) && LockStatus(item);
         }
 
-        // Debris piles and anything the game's own removal check refuses are never offered to a customer, so they get no outline.
+        // Fixed fixtures are never offered to a customer; matching contents can still give them corner hints.
         static bool IsImmovable(GameItem item)
         {
             if (item.IsTag("DEBRIS_PILE_TAG")) return true;

@@ -38,6 +38,80 @@ static class IntegrationTest
         return null;
     }
     static ConfigEntry<T> Entry<T>(string key) { return (ConfigEntry<T>)ModHelper.Config.Entries[key]; }
+    static bool Outlined(GameItemElement item) { var go=Child(item,"DemandHighlight"); return go!=null && go.activeInHierarchy; }
+    static CustomUIElement Widget(string id) { return CustomUIBuilder.Built.Find(e=>e.id==id); }
+
+    static void TrashAndDock()
+    {
+        Filter.Clear(); Engine.Release();
+        typeof(DemandMod).GetField("on", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, true);
+        var shop = new EmporiumEntry { invElement=new GameInventory(), trashInvElement=new GameInventory() };
+        EmporiumEntry.Instance=shop;
+        var buyer=new StoreClient {clientIntent=Intent.Buy};
+        PlayerStore.Instance=new PlayerStore {currentClientInstance=new ClientInstance {Blueprint=buyer}};
+        var food=new GameItemElement {Stolen=true,itemTypes=new List<string>{"FOOD"}};
+        var tool=new GameItemElement {Contraband=true,itemTypes=new List<string>{"TOOL"}};
+        var normalFood=new GameItemElement {itemTypes=new List<string>{"FOOD"}};
+        var bin=new GameItemElement {contentWindow=new PixelWindow(),itemTypes=new List<string>{"STORAGE"},mayInventoryRemoveItemFunc=(i,p)=>false};
+        bin.contentWindow.parentItems.Add(bin);
+        var inside=new GameInventory {Parent=bin};bin.children.Add(inside);
+        inside.childItems.Add(food);inside.childItems.Add(tool);inside.children.Add(food);inside.children.Add(tool);
+        food.parentInventory=tool.parentInventory=inside;
+        shop.trashInvElement.childItems.Add(bin);shop.trashInvElement.children.Add(bin);
+        shop.invElement.childItems.Add(normalFood);shop.invElement.children.Add(normalFood);
+        Step();
+        Check("closed fixed trashcan has a customer contents hint", Engine.Result.Items.Exists(h=>h.Element==bin && h.Style.Contents) && Outlined(bin));
+        Check("closed trashcan contents are not painted through its window", !Outlined(food));
+        bin.contentWindow.Show();Step();
+        Check("opening trashcan marks its wanted contents and the bin", Outlined(food) && Outlined(bin) && !Outlined(tool));
+        var all=new List<GameItem>();Shop.Each(all.Add);
+        Check("trash stock is included exactly once in counts and query traversal", all.Count==4 && all.FindAll(i=>i==food).Count==1);
+        inside.childItems.Remove(food);inside.children.Remove(food);bin.Validate();Step();
+        Check("removing the final wanted trash item removes the bin hint", !Outlined(bin));
+        inside.childItems.Add(food);inside.children.Add(food);bin.Validate();Step();
+
+        var canvas=(RectTransform)new GameObject("Pixel canvas").transform;canvas.rect=new Rect(0,0,640,360);
+        var inventory=(RectTransform)new GameObject("Inventory window").transform;inventory.SetParent(canvas,false);
+        inventory.rect=new Rect(0,0,300,150);inventory.localPosition=new Vector3(320,20,0);
+        var trash=(RectTransform)new GameObject("Trash window").transform;trash.SetParent(canvas,false);
+        trash.rect=new Rect(0,0,60,112);trash.localPosition=new Vector3(230,68,0);
+        shop.invWindow=new PixelWindow {rectTransform=inventory};shop.trashInvWindow=new PixelWindow {rectTransform=trash};
+        CustomUIManager.Instance=new CustomUIManager();Step();
+        var dock=Widget("mode").root.transform.parent as RectTransform;
+        Check("checkbox dock is embedded beside the inventory", dock.parent==canvas && dock.localPosition.x==316 && dock.localPosition.y==20);
+        Check("dock provides native category and risk checkboxes", Widget("FOOD")!=null && Widget("TOOL")!=null && Widget("$stolen")!=null && Widget("$contraband")!=null && Widget("CONTRABAND")==null);
+        Widget("TOOL").SetBool(true,true);Step();
+        Check("manual selection completely replaces customer demand", Engine.Current.Kind==Query.Op.Filter && Outlined(tool) && !Outlined(food) && !Outlined(normalFood));
+        Check("manual selection marks the fixed trashcan too", Outlined(bin) && Engine.Result.Items.Exists(h=>h.Element==bin && h.Style.Contents));
+        Widget("FOOD").SetBool(true,true);Step();
+        Check("multiple category checkboxes match either type", Outlined(tool) && Outlined(food) && Outlined(normalFood));
+        Widget("$stolen").SetBool(true,true);Step();
+        Check("type and risk groups intersect", Outlined(food) && !Outlined(tool) && !Outlined(normalFood));
+        Widget("$contraband").SetBool(true,true);Step();
+        Check("risk checkboxes match stolen or contraband", Outlined(food) && Outlined(tool) && !Outlined(normalFood));
+        Check("risk stars remain independent of manual demand outlines", Star(food)!=null && Star(tool)!=null);
+        Widget("clear").Click();Step();
+        Check("clear restores the current customer's demand", !Filter.Active && Engine.Current.Kind!=Query.Op.Filter && Outlined(food) && Outlined(normalFood) && !Outlined(tool));
+        Filter.SetContraband(Facets.State.In);Panel.Changed();Step();
+        Check("dock reflects edits from the shared advanced filter", Widget("$contraband").Checked && Outlined(tool) && !Outlined(food));
+        Widget("$contraband").SetBool(false,true);Step();
+        Check("unchecking the final selection restores customer demand", !Filter.Active && Outlined(food) && !Outlined(tool));
+        Filter.SetType("FOOD",Facets.State.Out);Panel.Changed();Step();
+        Check("advanced exclusions are visible and removable in the dock", Widget("FOOD").Checked && Widget("FOOD").Label.StartsWith("<s>"));
+        Widget("FOOD").SetBool(false,true);Step();
+        int toggles=Panel.Toggles;Widget("more").Click();
+        Check("more opens the existing advanced filter", Panel.Toggles==toggles+1);
+        inventory.gameObject.SetActive(false);Step();
+        Check("hidden inventory also hides its dock", !dock.gameObject.activeInHierarchy);
+        inventory.gameObject.SetActive(true);Step();
+        Check("returning to the inventory restores the dock", dock.gameObject.activeInHierarchy);
+        Widget("TOOL").SetBool(true,true);Step();
+        PlayerStore.Instance.currentClientInstance=null;Step();
+        Check("manual checkboxes work with no customer present", Engine.Current.Kind==Query.Op.Filter && Outlined(tool) && !Outlined(food));
+        SceneManager.Load("MainMenu");EmporiumEntry.Instance=null;Step();
+        Check("leaving the store destroys dock UI and keeps only filter data", dock.gameObject==null && Filter.OfType("TOOL")==Facets.State.In);
+        Filter.Clear();PlayerStore.Instance=null;CustomUIManager.Instance=null;
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     static WeakReference TemporaryView(out GameObject ui)
@@ -171,6 +245,7 @@ static class IntegrationTest
         Painter.Paint(Engine.Result);
         Check("container colour updates without rebuilding geometry", Child(box, "DemandHighlight").GetComponent<Image>().color == new Color(170 / 255f, 187 / 255f, 204 / 255f));
 
+        TrashAndDock();
         GameObject orphanUi;
         var weak = TemporaryView(out orphanUi);
         GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();

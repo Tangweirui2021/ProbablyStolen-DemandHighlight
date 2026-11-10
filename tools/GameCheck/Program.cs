@@ -57,6 +57,9 @@ static class Program
             null, new[] { typeof(CustomUIBuilder), typeof(ModConfig), typeof(ConfigEntry) }, null);
         if (buildEntry == null) throw new MissingMethodException("ModConfigWindow", "BuildEntry");
         targets++; Console.WriteLine("TARGET " + buildEntry);
+        method(typeof(CustomUIManager), "BuildInto", new[] { typeof(UnityEngine.RectTransform), typeof(bool), typeof(string) });
+        foreach (var name in new[] { "get_trashInvElement", "get_invWindow", "get_trashInvWindow" })
+            method(typeof(EmporiumEntry), name, Type.EmptyTypes);
         Console.WriteLine("API targets verified: " + targets);
         var dlls = System.IO.Directory.GetFiles(modFolder, "*.dll");
         if (dlls.Length != 1 || Path.GetFileName(dlls[0]) != "TypeDemandStars.dll")

@@ -1,5 +1,6 @@
 [b]Type Demand & Risk Stars — WRT fork[/b]
 Demand outlines use configurable item-type colors. Container contents use one configurable corner-hint color.
+Includes trashcan contents and a contents hint on the fixed bin. A scrolling checkbox dock below the trashcan shares the advanced filter; active manual selections replace customer demand, and Clear restores it.
 Independent, always-on pixel stars on all native item views: yellow = stolen, green = contraband, red = both.
 Colors, star size, thickness, corner rounding and fill are configurable in the game's native Mods settings.
 Demand/filter hotkeys do not disable permanent risk stars.

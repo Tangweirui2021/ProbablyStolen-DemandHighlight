@@ -48,7 +48,7 @@ dotnet build TypeDemandStars.csproj -c Release -p:GameManagedDir='/path/to/Manag
 python3 tools/check_docs.py
 ```
 
-测试包含 12 组纯逻辑测试和使用替身 API 执行真实修改代码的集成测试，无需游戏文件。这不能代替实际游戏程序集编译、Harmony 补丁及旋转／翻转／裁切验证，见 [VALIDATION.md](../../VALIDATION.md)。
+测试包含 13 组纯逻辑测试和使用替身 API 执行真实修改代码的集成测试，无需游戏文件。这不能代替实际游戏程序集编译、Harmony 补丁及旋转／翻转／裁切验证，见 [VALIDATION.md](../../VALIDATION.md)。
 
 ## 查询 API 示例
 

@@ -58,6 +58,7 @@ namespace UnityEngine
         public readonly List<Transform> children = new List<Transform>();
         public int childCount { get { return children.Count; } }
         public Vector3 localScale = Vector3.one;
+        public Vector3 localPosition;
         public Quaternion localRotation;
         public Transform GetChild(int i) { return children[i]; }
         public void SetParent(Transform p, bool worldPositionStays)
@@ -66,11 +67,28 @@ namespace UnityEngine
             parent = p; if (p != null) p.children.Add(this);
         }
         public void SetAsLastSibling() { if (parent != null) { parent.children.Remove(this); parent.children.Add(this); } }
+        public Vector3 TransformPoint(Vector3 p)
+        {
+            var v = new Vector3(p.x * localScale.x + localPosition.x, p.y * localScale.y + localPosition.y, p.z);
+            return parent == null ? v : parent.TransformPoint(v);
+        }
+        public Vector3 InverseTransformPoint(Vector3 p)
+        {
+            if (parent != null) p = parent.InverseTransformPoint(p);
+            return new Vector3((p.x - localPosition.x) / localScale.x, (p.y - localPosition.y) / localScale.y, p.z);
+        }
     }
     public class RectTransform : Transform
     {
         public Rect rect = new Rect(0, 0, 64, 64);
         public Vector2 anchorMin, anchorMax, pivot, offsetMin, offsetMax, sizeDelta, anchoredPosition;
+        public void GetWorldCorners(Vector3[] corners)
+        {
+            corners[0] = TransformPoint(new Vector3(rect.xMin, rect.yMin, 0));
+            corners[1] = TransformPoint(new Vector3(rect.xMin, rect.yMin + rect.height, 0));
+            corners[2] = TransformPoint(new Vector3(rect.xMin + rect.width, rect.yMin + rect.height, 0));
+            corners[3] = TransformPoint(new Vector3(rect.xMin + rect.width, rect.yMin, 0));
+        }
     }
     public struct Vector2
     {
@@ -87,7 +105,9 @@ namespace UnityEngine
     }
     public struct Vector4 { public float x,y,z,w; public Vector4(float x, float y, float z, float w) { this.x=x; this.y=y; this.z=z; this.w=w; } public static Vector4 zero { get { return new Vector4(); } } }
     public struct Quaternion { public static Quaternion identity { get { return new Quaternion(); } } }
-    public struct Rect { public float width, height; public Rect(float x, float y, float w, float h) { width = w; height = h; } }
+    public struct Rect { public float xMin, yMin, width, height; public Rect(float x, float y, float w, float h) { xMin=x; yMin=y; width=w; height=h; } }
+    public class RectOffset { public RectOffset(int l,int r,int t,int b) { } }
+    public enum TextAnchor { UpperLeft, MiddleLeft }
     public struct Color
     {
         public float r, g, b, a;
@@ -157,7 +177,25 @@ namespace UnityEngine.UI
     {
         public bool ignoreLayout;
         public int layoutPriority = 1;
-        public float minWidth, preferredWidth, flexibleWidth;
+        public float minWidth, preferredWidth, flexibleWidth, minHeight, preferredHeight, flexibleHeight;
+    }
+    public class RectMask2D : UnityEngine.Component { }
+    public class VerticalLayoutGroup : UnityEngine.Component
+    {
+        public UnityEngine.RectOffset padding;
+        public float spacing;
+        public bool childControlWidth, childControlHeight, childForceExpandWidth, childForceExpandHeight;
+        public UnityEngine.TextAnchor childAlignment;
+    }
+}
+namespace TMPro
+{
+    public enum TextOverflowModes { Ellipsis }
+    public class TextMeshProUGUI
+    {
+        public bool enableAutoSizing, enableWordWrapping;
+        public float fontSize;
+        public TextOverflowModes overflowMode;
     }
 }
 namespace UnityEngine.SceneManagement
@@ -216,14 +254,48 @@ public class ModConfig
 public class CustomUIElement
 {
     public UnityEngine.GameObject root;
+    public TMPro.TextMeshProUGUI text = new TMPro.TextMeshProUGUI();
+    public string id, Label;
+    public bool Checked;
+    public Action<bool> Toggle;
+    public Action Click;
     public CustomUIElement SetFixedWidth(float width)
     {
         var layout = root.GetComponent<UnityEngine.UI.LayoutElement>() ?? root.AddComponent<UnityEngine.UI.LayoutElement>();
         layout.minWidth = layout.preferredWidth = width; layout.flexibleWidth = 0;
         return this;
     }
+    public CustomUIElement SetPreferredSize(float w,float h) { return this; }
+    public CustomUIElement SetTooltip(string s) { return this; }
+    public CustomUIElement SetText(string s) { Label=s; return this; }
+    public CustomUIElement SetBool(bool on,bool notify) { Checked=on; if(notify && Toggle!=null) Toggle(on); return this; }
 }
-public class CustomUIBuilder { public CustomUIElement Last; }
+public class CustomUIBuilder
+{
+    public CustomUIElement Last;
+    public UnityEngine.RectTransform Host;
+    public static List<CustomUIElement> Built = new List<CustomUIElement>();
+    public static void ClearContainer(UnityEngine.RectTransform host) { Built.Clear(); }
+    public static void RebuildLayout(UnityEngine.RectTransform host) { }
+    public CustomUIBuilder BeginRow(float gap,UnityEngine.TextAnchor a) { return this; }
+    public CustomUIBuilder BeginScroll(float height) { return this; }
+    public CustomUIBuilder BeginGrid(int columns,float w,float h,float gap) { return this; }
+    public CustomUIBuilder End() { return this; }
+    CustomUIElement Add(string s,string id)
+    {
+        Last=new CustomUIElement {root=new UnityEngine.GameObject("Widget"),id=id,Label=s};
+        if(Host!=null) Last.root.transform.SetParent(Host,false);
+        Built.Add(Last); return Last;
+    }
+    public CustomUIBuilder AddLabel(string s,string id) { Add(s,id); return this; }
+    public CustomUIBuilder AddButton(string s,Action click,string id) { Add(s,id).Click=click; return this; }
+    public CustomUIBuilder AddToggle(string s,bool on,Action<bool> edit,string id) { var e=Add(s,id);e.Checked=on;e.Toggle=edit;return this; }
+}
+public class CustomUIManager : UnityEngine.MonoBehaviour
+{
+    public static CustomUIManager Instance;
+    public CustomUIBuilder BuildInto(UnityEngine.RectTransform host,bool meta,string id) { return new CustomUIBuilder {Host=host}; }
+}
 public static class ModConfigWindow
 {
     // Mirrors the native BuildEntry's fixed width and the priority-1 conflict in the supplied game/TMP IL.
@@ -275,6 +347,9 @@ public class GameItem : GraphNodeStorage
     public List<ItemFeature> itemFeatures = new List<ItemFeature>();
     public ModifiedState modifiedState = new ModifiedState();
     public PixelWindow contentWindow;
+    public GridShape shape, modifiedShape;
+    public long GetCurrentValue(bool a,bool b,bool c,bool d,long e) { return 1; }
+    public int GetItemSize() { return shape==null?0:shape.width*shape.height; }
     public bool IsTag(string tag) { TagState state; return modifiedState.dict.TryGetValue(tag, out state) && state.Enabled; }
     public bool IsGameItemType(string type) { return itemTypes.Contains(type); }
     public bool IsMovable() { return !Immovable; }
@@ -289,7 +364,6 @@ public class GameItem : GraphNodeStorage
 public class GameItemElement : GameItem
 {
     public UnityEngine.RectTransform rectTransform;
-    public GridShape shape, modifiedShape;
     public Rotator rotator;
     public TreeNodeRender background, fakeBackground, fakeMiddle;
     bool destroyed;
@@ -339,8 +413,9 @@ public class PixelWindow
     public object childElement;
     public List<GameItem> parentItems = new List<GameItem>();
     public bool IsVisible() { return Visible; }
-    public void Show() { Visible = true; }
-    public void Hide() { Visible = false; }
+    public UnityEngine.RectTransform rectTransform;
+    public void Show() { Visible = true; HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(),this); }
+    public void Hide() { Visible = false; HarmonyLib.Harmony.Notify(MethodBase.GetCurrentMethod(),this); }
 }
 public class MachineryTabs
 {
@@ -367,7 +442,8 @@ public class EmporiumEntry
 {
     public static EmporiumEntry Instance;
     public GameInventory invElement, frontInvinvElement, backInvinvElement, backInvinvElementCounter,
-        showcaseElement, bazarLeftinvElement, hiddenElement, soldElement;
+        showcaseElement, bazarLeftinvElement, hiddenElement, soldElement, trashInvElement;
+    public PixelWindow invWindow, trashInvWindow;
 }
 public class StoreClient
 {
@@ -389,15 +465,11 @@ namespace DemandHighlight
     {
         public static Func<string, string> L; public static Action Changed; public static Func<bool> Numbers;
         public static bool Typing;
+        public static int Toggles;
         public static IEnumerable<string> KnownTypes() { return TypeHelper.ALL_TYPES_LIST; }
         public static string TypeName(string type) { return type; }
-        public static void SetNumbers(bool value) { } public static void Toggle() { }
+        public static void SetNumbers(bool value) { } public static void Toggle() { Toggles++; }
         public static void Refresh() { } public static void Destroy() { }
-    }
-    public static class Filter
-    {
-        public static int StockVersion; public static bool Active;
-        public static FilterView View() { return null; }
     }
     public static class Marks { public static void Offer() { } public static void Withdraw() { } public static void Release() { } }
     public static class QueryHost { public static void Publish() { } public static void Withdraw() { } }

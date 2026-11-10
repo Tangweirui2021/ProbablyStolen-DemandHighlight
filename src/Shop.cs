@@ -23,6 +23,7 @@ namespace DemandHighlight
             Node(shop.bazarLeftinvElement, visit, seen, 0);
             Node(shop.hiddenElement, visit, seen, 0);
             Node(shop.soldElement, visit, seen, 0);
+            Node(shop.trashInvElement, visit, seen, 0);
         }
 
         static void Node(GraphNodeStorage node, Action<GameItem> visit, HashSet<object> seen, int depth)

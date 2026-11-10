@@ -55,3 +55,8 @@ opt_type_priority,多类型颜色优先级
 opt_hex_tip,填写 #RRGGBB 或 #RRGGBBAA。错误值沿用上次有效颜色；重启后错误值使用默认颜色。
 opt_star_size_tip,按一格的尺寸计算，默认等级 2 约为三分之一格。大容器和小物件使用相同大小；旧版设置自动采用缩小后的尺寸。
 opt_type_priority_tip,填写英文类型 ID，以逗号分隔，越靠前优先级越高。长文本可在固定宽度输入框内横向滚动。
+dock_customer,顾客需求
+dock_manual,手动筛选
+dock_clear,清空
+dock_more,更多
+dock_tip,多种类型取并集；赃物与违禁品取并集；类型与属性两组条件都需满足。全部取消或清空后恢复顾客需求高亮。更多可打开高级筛选窗口。

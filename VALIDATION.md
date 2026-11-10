@@ -9,10 +9,11 @@ Assembly-CSharp SHA-256: `725cb999d019dff1ff31bed353c7f9bb8d81a7605a15de1f80f5a3
 
 - Production mod compiled against the supplied real game assemblies: zero warnings/errors.
 - Optional query sample compiled against those same assemblies: zero warnings/errors.
-- Real-assembly preflight confirmed 21 API targets, including constructors, destruction and native drag-visibility hooks.
-- The supplied game's own `ModScanner.Scan` scanned 518 methods: no refusal, no error, no capabilities and no hard flags.
-- Twelve pure-data test suites: 370 checks passed.
-- Production-code integration against explicitly labelled stand-in game/Unity APIs: 55 checks passed.
+- Real-assembly preflight confirmed 25 API targets, including constructors, destruction and native drag-visibility hooks.
+- The supplied game's own `ModScanner.Scan` scanned 540 methods: no refusal, no error, no capabilities and no hard flags.
+- Thirteen pure-data test suites: 379 checks passed.
+- Production-code integration against explicitly labelled stand-in game/Unity APIs: 77 checks passed.
+- Trash/dock regressions cover closed/open fixed bins, removal of wanted contents, duplicate-free stock traversal, category/status selection, manual-query precedence, clearing, advanced-window synchronization, hidden inventory, no-customer use and scene cleanup.
 - Size/layout regressions cover one-cell items, large containers, grid-size changes, drag previews, top-right placement, the long priority field and isolation from other mods/settings.
 - Drag regressions cover whole-stack pickup, partial stacks, drag opacity, combined status, settings, drop and destruction cleanup.
 - Documentation links, 15 configuration keys, project/manifest XML, shell syntax and `git diff --check` passed.
@@ -20,9 +21,9 @@ Assembly-CSharp SHA-256: `725cb999d019dff1ff31bed353c7f9bb8d81a7605a15de1f80f5a3
 
 ## Player feedback and remaining gameplay checks
 
-Player screenshots from wrt.2 confirm stars rendering in the running game and exposed oversized badges and a stretched priority input. wrt.3 addresses these two regressions; the new size and settings layout still need confirmation in the running game.
+Player feedback confirms that the wrt.3 feature set is broadly working. wrt.4 adds the trashcan traversal and embedded checkbox dock. Its placement, font size, scrolling and actual native-toggle input still need confirmation in the running game.
 
-- Execution of the new settings-layout Harmony hook within Unity.
+- Native dock layout and pointer interaction in the running game, especially narrow resolutions and resized inventories.
 - Visual layout, scaling, clipping, rotation and mirroring in the running game.
 - Integration with third-party item UIs that bypass native GameItemElement views.
 

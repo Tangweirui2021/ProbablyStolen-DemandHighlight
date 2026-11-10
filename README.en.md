@@ -28,6 +28,10 @@ Outline thickness, rounding, faint fill, the Item Filter, statistics and key bin
 
 Stars default to about one third of a single grid cell. Large containers and one-cell items use the same size; existing saved size levels become compact automatically after updating.
 
+The trashcan is part of the searchable stock: matching contents give the fixed bin a one-color corner hint; opening it marks each matching item.
+
+An embedded scrolling checkbox dock sits below the trashcan, left of the main inventory. Choose types and stolen/contraband states to replace customer-demand highlights. Uncheck everything or use **Clear** to restore customer demand. **More** opens the advanced window; both controls share one filter expression.
+
 ## Settings
 
 Enable the mod, then use **main menu → Mods → this mod's gear button**. Colors are hexadecimal text fields (`#RRGGBB` or `#RRGGBBAA`), applied with Apply. The native panel's availability from the shop pause menu has not been confirmed.
@@ -59,7 +63,7 @@ Output: `out/wrt_type_demand_stars/`. Copy that whole folder into the game's `Mo
 python3 tools/check_docs.py
 ```
 
-Twelve pure-data suites and a stand-in integration suite exercise the fork. The real-assembly build and scanner checks were also completed separately; `tools/check-game.sh /path/to/Managed` repeats the API/scan checks. Actual Harmony execution and in-game Unity layout still require gameplay testing. See [VALIDATION.md](VALIDATION.md).
+Thirteen pure-data suites and a stand-in integration suite exercise the fork. The real-assembly build and scanner checks were also completed separately; `tools/check-game.sh /path/to/Managed` repeats the API/scan checks. Actual Harmony execution and in-game Unity layout still require gameplay testing. See [VALIDATION.md](VALIDATION.md).
 
 Entirely custom item interfaces that bypass native `GameItemElement` views need an adapter. Rotation, mirroring, irregular shapes and clipping still need real-game verification.
 

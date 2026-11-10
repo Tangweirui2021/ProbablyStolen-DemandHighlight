@@ -50,7 +50,7 @@ The source fork has no separate Workshop subscription yet; the original author's
 python3 tools/check_docs.py
 ```
 
-The first command runs 12 pure-data suites and production-code integration against explicitly labelled stand-in APIs; it needs no game files. It does not validate actual game assembly compatibility, Harmony patching, Unity rotation or clipping. See [VALIDATION.md](../../VALIDATION.md).
+The first command runs 13 pure-data suites and production-code integration against explicitly labelled stand-in APIs; it needs no game files. It does not validate actual game assembly compatibility, Harmony patching, Unity rotation or clipping. See [VALIDATION.md](../../VALIDATION.md).
 
 ## Query sample for mod authors
 

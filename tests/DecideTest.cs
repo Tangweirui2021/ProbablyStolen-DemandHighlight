@@ -52,6 +52,8 @@ static class DecideTest
             Is(Show(Buying, new Facts { Owned = true, Locked = true }, none, A(Mark.Normal, Mark.None)), Mark.None, false));
         Check("buying: an item behind a lock is not marked", Is(Show(Buying, new Facts { BehindLock = true }, want, nothing), Mark.None, false));
         Check("buying: an immovable item is not marked", Is(Show(Buying, new Facts { Immovable = true }, want, nothing), Mark.None, false));
+        Check("buying: fixed trashcan points to wanted contents", Is(Show(Buying, new Facts { Immovable = true }, none, A(Mark.Normal, Mark.None)), Mark.Normal, true));
+        Check("buying: locked fixed fixture hides its contents", Is(Show(Buying, new Facts { Immovable = true, Locked = true }, none, A(Mark.Normal, Mark.None)), Mark.None, false));
         Check("buying: nothing inside a locked container above is marked",
             Is(Show(Buying, mine, want, nothing, lockedAbove: true), Mark.None, false));
         bool bought;

@@ -55,7 +55,7 @@ static void CountFood()
 
 ## What is searched
 
-Every item of the shop, each once: the shop inventories, the counter, the showcase, the market stall, the hidden and sold areas, and everything inside them, closed and locked containers included. An item matches on its own facts. A container matches only if the container itself matches, not because of what it holds. Items come back in the order of the walk, which is stable for an unchanged shop, but don't rely on it for anything else.
+Every item of the shop, each once: the shop inventories, the counter, the showcase, the market stall, the hidden and sold areas, the fixed trashcan, and everything inside them, closed and locked containers included. An item matches on its own facts. A container matches only if the container itself matches, not because of what it holds. Items come back in the order of the walk, which is stable for an unchanged shop, but don't rely on it for anything else.
 
 The expression is the Item Filter's language, described in full on [Filter language](filter-language.md): `stolen`, `contraband`, `owned`, `type:`, `tag:`, `id:`, `condition:`, groups such as `type:(a or b)`, and `and` / `+`, `or` / `|`, `not` / `-` with brackets. Type names are read in the player's language too (`type:食物`), so in code use the game's identifiers (`type:FOOD`): they work in every language.
 

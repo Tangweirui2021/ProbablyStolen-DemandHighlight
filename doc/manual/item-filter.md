@@ -4,9 +4,17 @@
 
 The Item Filter marks your own stock by type, stolen or contraband, or by anything you can write as an expression, whoever is at the counter. Use it to sort the shop.
 
-## Opening it
+## Embedded checkbox dock
 
-Press the key bound to **Open item filter** in the game's options menu. It is an ordinary game window: drag it by its title, close it with Esc or its cross, and it opens again where you left it. Texture packs that reskin the game's windows reskin it too.
+A compact scrolling dock sits below the trashcan, left of the main inventory. It contains stolen/contraband checkboxes and all known item types. Clicking includes or clears a choice. Types are ORed together; statuses are ORed together; the type and status groups must both match.
+
+Any active filter replaces customer demand. Clearing every choice, or pressing **Clear**, restores customer demand. **More** opens the advanced window. Both interfaces edit the same expression; advanced exclusions appear as checked, struck-through labels and can be removed from the dock. Permanent stars are independent.
+
+The dock follows the inventory window, uses one column when narrow, and only appears while the inventory is visible. It creates no Esc-close target. With too little room it hides; the existing advanced-window key binding remains available. The trashcan and its contents are included in both demand matching and filtering: the closed bin shows a contents hint, and its open view marks matching items.
+
+## Opening the advanced window
+
+Click **More** in the dock, or press the key bound to **Open item filter** in the game's options menu. It is an ordinary game window: drag it by its title, close it with Esc or its cross, and it opens again where you left it. Texture packs that reskin the game's windows reskin it too.
 
 ## The window
 

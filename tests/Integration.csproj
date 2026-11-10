@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../src/*.Pure.cs;../src/MarkerSettings.cs;../src/RiskStars.cs;../src/Painter.cs;../src/Sprites.cs;../src/Engine.cs;../src/Intent.cs;../src/DemandMod.cs" />
+    <Compile Include="../src/Filter.cs;../src/Shop.cs;../src/FilterDock.cs" />
     <Compile Include="integration/*.cs" />
   </ItemGroup>
 </Project>

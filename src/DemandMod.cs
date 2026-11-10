@@ -193,6 +193,7 @@ namespace DemandHighlight
             try { RiskStars.DestroyAll(); } catch (Exception) { }
             try { Sprites.Clear(); } catch (Exception) { }
             try { Panel.Destroy(); } catch (Exception) { }
+            try { FilterDock.Destroy(); } catch (Exception) { }
             try { Marks.Release(); } catch (Exception) { }
             drawn = false;
             lastClient = null;
@@ -218,6 +219,7 @@ namespace DemandHighlight
             GameIntent.Release();
             Painter.DestroyAll();
             Panel.Destroy();
+            FilterDock.Destroy();
             Marks.Release();
             lastClient = null;
             query = Query.Nothing;
@@ -363,6 +365,7 @@ namespace DemandHighlight
                     }
                     if (panelKey != KeyCode.None && Input.GetKeyDown(panelKey)) Panel.Toggle();
                 }
+                FilterDock.Tick();
                 Panel.Refresh();
 
                 if (!on)

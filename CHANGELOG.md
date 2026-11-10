@@ -1,5 +1,12 @@
 # WRT fork changelog
 
+## 1.0.0-wrt.4
+
+- Included the fixed trashcan slot and its contents in demand scans, filter counts and public queries. Fixed containers can now show a contents hint without being offered for sale.
+- Added an embedded, scrolling checkbox dock below the trashcan and left of the main inventory, with native type/stolen/contraband controls.
+- Shared the existing filter expression with the advanced window: active manual selections replace customer demand; clearing restores it.
+- Dock follows inventory layout, switches to one column in narrow gaps, hides with the inventory and releases its UI on scene exit.
+
 ## 1.0.0-wrt.3
 
 - Fixed oversized stars: default dimensions are about one third of a single grid cell, for both small items and containers. Normal and drag views share the same sizing.
